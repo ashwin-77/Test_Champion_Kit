@@ -21,3 +21,5 @@ No environment variables required.
 - `app/` — pages: `/` (pitch), `/calculator`, `/proof`, `/why-theo`, `/trust`
 - `lib/model.ts` — ROI math + benchmark sources (single source of truth)
 - `CLAUDE.md` — context and hard rules for AI-assisted edits. **Read before changing content.**
+
+<!-- deploy trigger: 2026-07-04T21:52:09Z -->
