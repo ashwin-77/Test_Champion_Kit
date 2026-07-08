@@ -64,10 +64,31 @@ so production must ship from the team account).
 - Persona reference: "12. Theo_AI_Persona_Reference - FINAL.pdf" (Theo Buyer Personas)
 - Clio competitive intel doc — source material for /why-theo
 
+## Current state (as of July 4, 2026)
+
+- Deployed and live on Ashwin's personal Vercel (project: test-champion-kit) via
+  GitHub integration. Push to `main` → auto-deploy. `vercel.json` pins the
+  framework to nextjs — do not remove it (without it, Vercel misdetected the
+  project as static and failed with "No Output Directory named public").
+- Production build verified clean; all 5 routes prerender static.
+- Preview URL shared with Patrick/Pamela for feedback (pending).
+
+## Working conventions
+
+- Run `npm install` once, then `npm run dev` for local preview at localhost:3000.
+- Commit and push after each coherent change; Vercel deploys in ~2 min.
+- Experiments go on branches — Vercel gives each branch its own preview URL.
+  When Patrick's gc-dash-v6 v0 code arrives, it goes on a branch; port THIS
+  content and math into HIS visual design, not the reverse.
+- Ashwin is not a professional developer: explain changes plainly, keep diffs
+  small and reviewable, never force-push.
+
 ## Open items
 
-- [ ] Get gc-dash-v6 v0 project code from Patrick; align visual design to it
+- [ ] Get gc-dash-v6 v0 project code from Patrick; align visual design to it (branch!)
 - [ ] Replace license placeholder with real quote
 - [ ] Replace draft GC quote with approved reference
 - [ ] Marketing sign-off on 2x and 85% claims
 - [ ] Move to Theo Vercel team + champions.theoai.ai when invite lands
+      (personal Vercel Hobby tier is non-commercial — production must ship
+      from the team account)
