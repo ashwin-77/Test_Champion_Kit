@@ -1,0 +1,81 @@
+import Link from "next/link";
+import { BENCHMARK_DEFAULTS, compute, fmtUSDk } from "@/lib/model";
+
+const stats = [
+  { n: "$4.1M", label: "average annual litigation spend, $1B+ companies", src: "Norton Rose Fulbright 2025" },
+  { n: "60%", label: "of CLOs report litigation costs grew this year", src: "ACC 2025 CLO Survey" },
+  { n: "45%", label: "of departments told to hold litigation spend flat", src: "Norton Rose Fulbright 2025" },
+];
+
+const pillars = [
+  {
+    title: "Better forecasting",
+    body: "Reserve predictability across the portfolio — no quarter-close surprises to explain to the audit committee.",
+  },
+  {
+    title: "Risk management",
+    body: "Early warning signals across every matter, before exposure becomes a headline number.",
+  },
+  {
+    title: "Timelier reporting",
+    body: "A board-ready litigation posture on demand — not assembled the week before a meeting.",
+  },
+];
+
+export default function Executive() {
+  const r = compute(BENCHMARK_DEFAULTS);
+
+  return (
+    <div className="mx-auto max-w-6xl px-6 py-14">
+      <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#E8541E]">
+        For Executive Teams &amp; the Board
+      </p>
+      <h1 className="mt-3 max-w-2xl text-4xl font-bold tracking-tight">
+        Better forecasting. Earlier risk signals. Reporting on demand.
+      </h1>
+
+      <div className="mt-10 grid gap-5 sm:grid-cols-3">
+        {pillars.map((p) => (
+          <div key={p.title} className="rounded-xl bg-white/5 p-6">
+            <h2 className="font-semibold text-[#E8541E]">{p.title}</h2>
+            <p className="mt-2 text-sm text-white/80">{p.body}</p>
+          </div>
+        ))}
+      </div>
+
+      <h2 className="mt-16 text-sm font-bold uppercase tracking-[0.2em] text-[#E8541E]">
+        Why now
+      </h2>
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        {stats.map((s) => (
+          <div key={s.n} className="rounded-xl bg-white/5 p-5">
+            <div className="text-3xl font-bold text-[#E8541E]">{s.n}</div>
+            <p className="mt-2 text-sm text-white/80">{s.label}</p>
+            <p className="mt-3 text-[11px] italic text-white/40">{s.src}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-12 rounded-2xl bg-white/5 p-8 md:flex md:items-center md:justify-between">
+        <div>
+          <div className="text-sm font-bold uppercase tracking-[0.2em] text-white/60">Base case</div>
+          <p className="mt-2 text-lg text-white/90">
+            <span className="font-bold text-[#E8541E]">{r.roi.toFixed(1)}x</span> ROI ·{" "}
+            <span className="font-bold text-[#E8541E]">
+              {r.paybackMonths < 1 ? "<1" : r.paybackMonths.toFixed(1)}-month
+            </span>{" "}
+            payback ·{" "}
+            <span className="font-bold text-[#E8541E]">{fmtUSDk(r.totalValue)}</span> total annual
+            value
+          </p>
+        </div>
+        <Link
+          href="/"
+          className="mt-4 inline-block shrink-0 rounded-lg bg-[#E8541E] px-6 py-3 font-semibold text-white transition hover:bg-[#c9440f] md:mt-0"
+        >
+          See the full model
+        </Link>
+      </div>
+    </div>
+  );
+}

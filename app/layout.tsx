@@ -10,18 +10,18 @@ export const metadata: Metadata = {
 };
 
 const nav = [
-  { href: "/", label: "The Pitch" },
-  { href: "/calculator", label: "ROI Calculator" },
-  { href: "/proof", label: "Proof" },
-  { href: "/why-theo", label: "Why Theo Ai" },
-  { href: "/trust", label: "Trust & Terms" },
+  { href: "/", label: "Head of Litigation" },
+  { href: "/security", label: "Information & Security" },
+  { href: "/procurement", label: "Procurement" },
+  { href: "/legal", label: "Legal" },
+  { href: "/executive", label: "Executive & Board" },
 ];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className="min-h-screen bg-[#221A16] text-white antialiased">
-        <header className="sticky top-0 z-50 border-b border-white/10 bg-[#221A16]/95 backdrop-blur">
+        <header className="no-print sticky top-0 z-50 border-b border-white/10 bg-[#221A16]/95 backdrop-blur">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
             <Link href="/" className="flex items-center gap-2 text-lg font-bold tracking-tight">
               <span className="inline-block h-2.5 w-2.5 rotate-45 bg-[#E8541E]" />
@@ -44,7 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </header>
         <main>{children}</main>
-        <footer className="border-t border-white/10">
+        <footer className="no-print border-t border-white/10">
           <div className="mx-auto max-w-6xl px-6 py-8 text-xs text-white/40">
             <p>
               Internal draft — contains placeholders (license pricing, customer quote). Benchmarks

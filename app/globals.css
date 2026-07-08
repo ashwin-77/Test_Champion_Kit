@@ -1,1 +1,20 @@
 @import "tailwindcss";
+
+/* One-pager printing (Head of Litigation tab): everything but .print-only
+   is hidden when printing, so window.print() yields a single clean page. */
+.print-only {
+  display: none;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+  }
+}
