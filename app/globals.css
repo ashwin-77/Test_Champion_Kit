@@ -1,5 +1,60 @@
 @import "tailwindcss";
 
+/* Exact Theo color palette (dark), ported from the gc-dash-v6 mockup
+   (brianjmeier/home-depo-dash, components/impact-view.tsx + app/globals.css).
+   This site has no light/dark toggle, so we apply the mockup's `.dark` block
+   directly as our only theme instead of carrying both variants. */
+:root {
+  --background: #1a1614; /* Deep Coffee */
+  --foreground: #f4ece1; /* Creamy Off-White */
+  --card: rgba(26, 22, 20, 0.9); /* Deep Coffee, translucent */
+  --card-foreground: #f4ece1;
+  --primary: #f15735; /* Tangerine */
+  --primary-foreground: #ffffff;
+  --secondary: rgba(225, 211, 197, 0.1); /* Light Beige, low opacity */
+  --secondary-foreground: #f4ece1;
+  --muted: rgba(244, 236, 225, 0.1);
+  --muted-foreground: #b5a79a; /* Taupe */
+  --accent: rgba(168, 208, 216, 0.2); /* Light Cyan, low opacity */
+  --accent-foreground: #f4ece1;
+  --border: rgba(217, 217, 217, 0.2);
+  --input: rgba(26, 22, 20, 0.8);
+  --ring: rgba(168, 208, 216, 0.4);
+  --radius: 0.5rem;
+}
+
+@theme inline {
+  --font-sans: var(--font-inter);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+}
+
 /* One-pager printing (Head of Litigation tab): everything but .print-only
    is hidden when printing, so window.print() yields a single clean page. */
 .print-only {

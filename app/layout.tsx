@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Inter } from "next/font/google";
 import "./globals.css";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
   title: "Theo Ai — Champion Kit",
@@ -20,13 +23,13 @@ const nav = [
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-[#221A16] text-white antialiased">
-        <header className="no-print sticky top-0 z-50 border-b border-white/10 bg-[#221A16]/95 backdrop-blur">
+      <body className={`${inter.variable} min-h-screen bg-background text-foreground antialiased`}>
+        <header className="no-print sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
             <Link href="/" className="flex items-center gap-2 text-lg font-bold tracking-tight">
-              <span className="inline-block h-2.5 w-2.5 rotate-45 bg-[#E8541E]" />
+              <span className="inline-block h-2.5 w-2.5 rotate-45 bg-primary" />
               theo ai
-              <span className="ml-2 hidden rounded-full border border-white/20 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-white/60 sm:inline">
+              <span className="ml-2 hidden rounded-full border border-border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground sm:inline">
                 Champion Kit
               </span>
             </Link>
@@ -35,7 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Link
                   key={n.href}
                   href={n.href}
-                  className="rounded-md px-3 py-1.5 text-white/70 transition hover:bg-white/10 hover:text-white"
+                  className="rounded-md px-3 py-1.5 text-muted-foreground transition hover:bg-accent hover:text-foreground"
                 >
                   {n.label}
                 </Link>
@@ -44,8 +47,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </header>
         <main>{children}</main>
-        <footer className="no-print border-t border-white/10">
-          <div className="mx-auto max-w-6xl px-6 py-8 text-xs text-white/40">
+        <footer className="no-print border-t border-border">
+          <div className="mx-auto max-w-6xl px-6 py-8 text-xs text-muted-foreground">
             <p>
               Internal draft — contains placeholders (license pricing, customer quote). Benchmarks
               are cited estimates for a budget conversation, not a guarantee of results.

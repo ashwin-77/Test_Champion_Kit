@@ -18,13 +18,13 @@ const checklist = [
 export default function Security() {
   return (
     <div className="mx-auto max-w-4xl px-6 py-14">
-      <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#E8541E]">
+      <p className="text-xs font-bold uppercase tracking-[0.25em] text-primary">
         For Information &amp; Security
       </p>
       <h1 className="mt-3 max-w-2xl text-4xl font-bold tracking-tight">
         Full security documentation lives at trust.theoai.ai.
       </h1>
-      <p className="mt-4 max-w-2xl text-white/70">
+      <p className="mt-4 max-w-2xl text-muted-foreground">
         SOC 2 Type II, SSO/SCIM/MFA, tenant isolation, the sub-processor list, and incident
         notification terms are all documented there.
       </p>
@@ -32,27 +32,30 @@ export default function Security() {
         href="https://trust.theoai.ai"
         target="_blank"
         rel="noreferrer"
-        className="mt-6 inline-block rounded-lg bg-[#E8541E] px-6 py-3 font-semibold text-white transition hover:bg-[#c9440f]"
+        className="mt-6 inline-block rounded-lg bg-primary px-6 py-3 font-semibold text-primary-foreground transition hover:bg-primary/90"
       >
         View security documentation ↗
       </a>
 
-      <h2 className="mt-16 text-sm font-bold uppercase tracking-[0.2em] text-[#E8541E]">
+      <h2 className="mt-16 text-sm font-bold uppercase tracking-[0.2em] text-primary">
         Why a purpose-built model, for the AI committee
       </h2>
       <div className="mt-6 space-y-5">
         {comparisons.map((c) => (
-          <div key={c.q} className="rounded-xl bg-white/5 p-6">
-            <h3 className="font-semibold text-[#E8541E]">{c.q}</h3>
-            <p className="mt-2 text-sm text-white/80">{c.a}</p>
+          <div key={c.q} className="rounded-lg border border-border bg-card p-6 shadow-sm">
+            <h3 className="font-semibold text-primary">{c.q}</h3>
+            <p className="mt-2 text-sm text-foreground/80">{c.a}</p>
           </div>
         ))}
       </div>
 
       <ul className="mt-8 grid gap-3 sm:grid-cols-3">
         {checklist.map((item) => (
-          <li key={item} className="flex gap-3 rounded-lg bg-white/5 p-4 text-sm text-white/80">
-            <span className="mt-1.5 inline-block h-1.5 w-1.5 shrink-0 rotate-45 bg-[#E8541E]" />
+          <li
+            key={item}
+            className="flex gap-3 rounded-lg border border-border bg-card p-4 text-sm text-foreground/80 shadow-sm"
+          >
+            <span className="mt-1.5 inline-block h-1.5 w-1.5 shrink-0 rotate-45 bg-primary" />
             {item}
           </li>
         ))}

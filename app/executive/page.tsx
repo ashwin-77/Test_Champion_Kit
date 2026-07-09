@@ -27,7 +27,7 @@ export default function Executive() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-14">
-      <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#E8541E]">
+      <p className="text-xs font-bold uppercase tracking-[0.25em] text-primary">
         For Executive Teams &amp; the Board
       </p>
       <h1 className="mt-3 max-w-2xl text-4xl font-bold tracking-tight">
@@ -36,42 +36,42 @@ export default function Executive() {
 
       <div className="mt-10 grid gap-5 sm:grid-cols-3">
         {pillars.map((p) => (
-          <div key={p.title} className="rounded-xl bg-white/5 p-6">
-            <h2 className="font-semibold text-[#E8541E]">{p.title}</h2>
-            <p className="mt-2 text-sm text-white/80">{p.body}</p>
+          <div key={p.title} className="rounded-lg border border-border bg-card p-6 shadow-sm">
+            <h2 className="font-semibold text-primary">{p.title}</h2>
+            <p className="mt-2 text-sm text-foreground/80">{p.body}</p>
           </div>
         ))}
       </div>
 
-      <h2 className="mt-16 text-sm font-bold uppercase tracking-[0.2em] text-[#E8541E]">
+      <h2 className="mt-16 text-sm font-bold uppercase tracking-[0.2em] text-primary">
         Why now
       </h2>
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
         {stats.map((s) => (
-          <div key={s.n} className="rounded-xl bg-white/5 p-5">
-            <div className="text-3xl font-bold text-[#E8541E]">{s.n}</div>
-            <p className="mt-2 text-sm text-white/80">{s.label}</p>
-            <p className="mt-3 text-[11px] italic text-white/40">{s.src}</p>
+          <div key={s.n} className="rounded-lg border border-border bg-card p-5 shadow-sm">
+            <div className="text-3xl font-bold text-primary">{s.n}</div>
+            <p className="mt-2 text-sm text-foreground/80">{s.label}</p>
+            <p className="mt-3 text-[11px] italic text-muted-foreground">{s.src}</p>
           </div>
         ))}
       </div>
 
-      <div className="mt-12 rounded-2xl bg-white/5 p-8 md:flex md:items-center md:justify-between">
+      <div className="mt-12 rounded-lg border border-border bg-card p-8 shadow-sm md:flex md:items-center md:justify-between">
         <div>
-          <div className="text-sm font-bold uppercase tracking-[0.2em] text-white/60">Base case</div>
-          <p className="mt-2 text-lg text-white/90">
-            <span className="font-bold text-[#E8541E]">{r.roi.toFixed(1)}x</span> ROI ·{" "}
-            <span className="font-bold text-[#E8541E]">
+          <div className="text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground">Base case</div>
+          <p className="mt-2 text-lg text-foreground/90">
+            <span className="font-bold text-primary">{r.roi.toFixed(1)}x</span> ROI ·{" "}
+            <span className="font-bold text-primary">
               {r.paybackMonths < 1 ? "<1" : r.paybackMonths.toFixed(1)}-month
             </span>{" "}
             payback ·{" "}
-            <span className="font-bold text-[#E8541E]">{fmtUSDk(r.totalValue)}</span> total annual
+            <span className="font-bold text-primary">{fmtUSDk(r.totalValue)}</span> total annual
             value
           </p>
         </div>
         <Link
           href="/"
-          className="mt-4 inline-block shrink-0 rounded-lg bg-[#E8541E] px-6 py-3 font-semibold text-white transition hover:bg-[#c9440f] md:mt-0"
+          className="mt-4 inline-block shrink-0 rounded-lg bg-primary px-6 py-3 font-semibold text-primary-foreground transition hover:bg-primary/90 md:mt-0"
         >
           See the full model
         </Link>

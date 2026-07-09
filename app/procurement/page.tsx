@@ -33,53 +33,56 @@ const procurementNotes = [
 export default function Procurement() {
   return (
     <div className="mx-auto max-w-6xl px-6 py-14">
-      <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#E8541E]">
+      <p className="text-xs font-bold uppercase tracking-[0.25em] text-primary">
         For Procurement
       </p>
       <h1 className="mt-3 max-w-2xl text-4xl font-bold tracking-tight">
         Why we benchmark, and exactly how your data is used.
       </h1>
 
-      <div className="mt-10 rounded-2xl bg-white/5 p-8">
-        <p className="text-lg font-medium text-white">
+      <div className="mt-10 rounded-lg border border-border bg-card p-8 shadow-sm">
+        <p className="text-lg font-medium text-foreground">
           &ldquo;Customer data is never used to train foundation or shared models. Theo Ai may
           derive deidentified, aggregated benchmark statistics (no PII, no privileged material, no
           party names, minimum cohort thresholds, no reidentification).&rdquo;
         </p>
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           {dataUseFacts.map((f) => (
-            <div key={f.label} className="rounded-lg bg-[#221A16] p-5">
-              <div className="text-xs font-bold uppercase tracking-widest text-[#E8541E]">
+            <div key={f.label} className="rounded-lg bg-background p-5">
+              <div className="text-xs font-bold uppercase tracking-widest text-primary">
                 {f.label}
               </div>
-              <p className="mt-2 text-sm text-white/80">{f.value}</p>
+              <p className="mt-2 text-sm text-foreground/80">{f.value}</p>
             </div>
           ))}
         </div>
-        <p className="mt-6 text-sm text-white/50">
+        <p className="mt-6 text-sm text-muted-foreground">
           Ask your account contact for the full benchmark-data clause during contracting.
         </p>
       </div>
 
-      <h2 className="mt-16 text-sm font-bold uppercase tracking-[0.2em] text-[#E8541E]">
+      <h2 className="mt-16 text-sm font-bold uppercase tracking-[0.2em] text-primary">
         Contract walkthrough
       </h2>
       <div className="mt-6 space-y-4">
         {procurementNotes.map((n) => (
-          <div key={n.term} className="rounded-xl bg-white/5 p-6 md:flex md:gap-8">
-            <div className="w-48 shrink-0 font-semibold text-white">{n.term}</div>
-            <p className="mt-2 text-sm text-white/75 md:mt-0">{n.plain}</p>
+          <div
+            key={n.term}
+            className="rounded-lg border border-border bg-card p-6 shadow-sm md:flex md:gap-8"
+          >
+            <div className="w-48 shrink-0 font-semibold text-foreground">{n.term}</div>
+            <p className="mt-2 text-sm text-foreground/80 md:mt-0">{n.plain}</p>
           </div>
         ))}
       </div>
 
-      <div className="mt-12 rounded-xl border border-white/15 p-6 text-sm text-white/70">
+      <div className="mt-12 rounded-lg border border-border p-6 text-sm text-muted-foreground">
         Full security documentation, SOW/MSA templates, and a CISO pre-read are available at{" "}
         <a
           href="https://trust.theoai.ai"
           target="_blank"
           rel="noreferrer"
-          className="text-[#E8541E] hover:underline"
+          className="text-primary hover:underline"
         >
           trust.theoai.ai
         </a>{" "}

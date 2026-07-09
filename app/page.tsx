@@ -1,9 +1,21 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import {
+  Briefcase,
+  Calculator,
+  Calendar,
+  ChevronDown,
+  DollarSign,
+  Printer,
+  SlidersHorizontal,
+  TrendingUp,
+  Wallet,
+} from "lucide-react";
 import { BENCHMARK_DEFAULTS, compute, fmtUSD, fmtUSDk, SOURCES, type Inputs } from "@/lib/model";
 
 type NumKey = keyof Inputs;
+type Tone = "teal" | "rose";
 
 interface FieldDef {
   key: NumKey;
@@ -11,7 +23,6 @@ interface FieldDef {
   note?: string;
   prefix?: string;
   suffix?: string;
-  step?: number;
   pct?: boolean;
   placeholder?: boolean;
 }
@@ -38,6 +49,20 @@ const assumptionFields: FieldDef[] = [
   { key: "calibrationPct", label: "Improvement on settlements paid", pct: true },
 ];
 
+const allFields = [...portfolioFields, ...theoFields, ...assumptionFields];
+
+const methodologyPills: Partial<Record<NumKey, { tone: Tone; label: string }>> = {
+  matters: { tone: "teal", label: "Cited benchmark" },
+  costPerMatter: { tone: "teal", label: "Cited benchmark" },
+  blendedRate: { tone: "teal", label: "Cited benchmark" },
+  settlementsPaid: { tone: "rose", label: "Your input" },
+  license: { tone: "rose", label: "Placeholder" },
+  earlierPct: { tone: "teal", label: "Cited benchmark" },
+  costAvoidPct: { tone: "teal", label: "Cited benchmark" },
+  hoursSaved: { tone: "rose", label: "Modeled assumption" },
+  capacityGain: { tone: "teal", label: "Cited benchmark" },
+};
+
 const proofPoints = [
   {
     stat: "85% vs 60–65%",
@@ -56,44 +81,138 @@ const proofPoints = [
   },
 ];
 
+function SourcePill({ children, tone }: { children: React.ReactNode; tone: Tone }) {
+  const tones: Record<Tone, string> = {
+    teal: "bg-teal-500/10 text-teal-400",
+    rose: "bg-rose-500/10 text-rose-400",
+  };
+  return (
+    <span className={`inline-flex shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold ${tones[tone]}`}>
+      {children}
+    </span>
+  );
+}
+
 function Field({ def, value, onChange }: { def: FieldDef; value: number; onChange: (v: number) => void }) {
   const display = def.pct ? Math.round(value * 1000) / 10 : value;
   return (
-    <label className="block">
-      <span className="flex items-center gap-2 text-sm font-medium text-white/80">
+    <label className="block space-y-1.5">
+      <span className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
         {def.label}
         {def.placeholder && (
-          <span className="rounded bg-yellow-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-yellow-400">
+          <span className="rounded bg-yellow-500/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-yellow-400">
             placeholder
           </span>
         )}
       </span>
-      <span className="mt-1.5 flex items-center gap-1 rounded-lg border border-white/15 bg-white/5 px-3 py-2 focus-within:border-[#E8541E]">
-        {def.prefix && <span className="text-white/40">{def.prefix}</span>}
+      <div className="relative">
+        {def.prefix && (
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+            {def.prefix}
+          </span>
+        )}
         <input
           type="number"
-          className="w-full bg-transparent text-white outline-none [appearance:textfield]"
+          className={`h-10 w-full rounded-md border border-border bg-input text-sm font-medium text-foreground shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 [appearance:textfield] ${
+            def.prefix ? "pl-7" : "pl-3"
+          } ${def.suffix || def.pct ? "pr-10" : "pr-3"}`}
           value={display}
           min={0}
-          step={def.step ?? (def.pct ? 1 : 1)}
           onChange={(e) => {
             const raw = parseFloat(e.target.value);
             const v = isNaN(raw) ? 0 : raw;
             onChange(def.pct ? v / 100 : v);
           }}
         />
-        {def.pct && <span className="text-white/40">%</span>}
-        {def.suffix && <span className="text-white/40">{def.suffix}</span>}
-      </span>
-      {def.note && <span className="mt-1 block text-xs text-white/40">{def.note}</span>}
+        {(def.suffix || def.pct) && (
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+            {def.pct ? "%" : def.suffix}
+          </span>
+        )}
+      </div>
     </label>
+  );
+}
+
+function MetricCard({
+  icon: Icon,
+  label,
+  value,
+  helper,
+  pill,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: React.ReactNode;
+  helper: string;
+  pill: string;
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+        <Icon className="h-4 w-4" />
+        {label}
+      </div>
+      <div className="mt-3 text-3xl font-bold tracking-tight text-primary">{value}</div>
+      <div className="mt-2 text-xs text-muted-foreground">{helper}</div>
+      <div className="mt-4 border-t border-border pt-3">
+        <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          {pill}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function MethodologyRow({
+  label,
+  helper,
+  value,
+  pill,
+}: {
+  label: string;
+  helper: string;
+  value: string;
+  pill: React.ReactNode;
+}) {
+  return (
+    <div className="grid gap-2 py-3 sm:grid-cols-[1fr_auto] sm:items-center sm:gap-3">
+      <div>
+        <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-foreground">
+          {label}
+          {pill}
+        </div>
+        <div className="mt-0.5 text-xs text-muted-foreground">{helper}</div>
+      </div>
+      <div className="text-sm font-semibold text-foreground sm:text-right">{value}</div>
+    </div>
+  );
+}
+
+function SectionCard({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+      <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+        <Icon className="h-4 w-4 text-muted-foreground" />
+        {title}
+      </h2>
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">{children}</div>
+    </div>
   );
 }
 
 export default function Home() {
   const [inputs, setInputs] = useState<Inputs>(BENCHMARK_DEFAULTS);
-  const [showSources, setShowSources] = useState(false);
   const [companyName, setCompanyName] = useState("");
+  const [methodologyOpen, setMethodologyOpen] = useState(false);
   const r = useMemo(() => compute(inputs), [inputs]);
   const set = (k: NumKey) => (v: number) => setInputs((p) => ({ ...p, [k]: v }));
 
@@ -105,17 +224,29 @@ export default function Home() {
   ].sort((a, b) => b.value - a.value);
   const maxDriver = Math.max(...drivers.map((d) => d.value), 1);
 
+  const methodologyRows = (Object.keys(methodologyPills) as NumKey[]).map((key) => {
+    const def = allFields.find((f) => f.key === key)!;
+    const pill = methodologyPills[key]!;
+    const raw = inputs[key];
+    const value = def.pct
+      ? `${Math.round(raw * 1000) / 10}%`
+      : def.prefix === "$"
+        ? `${fmtUSD(raw)}${def.suffix ?? ""}`
+        : `${raw}${def.suffix ?? ""}`;
+    return { label: def.label, helper: def.note!, value, pill: <SourcePill tone={pill.tone}>{pill.label}</SourcePill> };
+  });
+
   return (
     <>
       {/* Hero */}
       <section className="mx-auto max-w-6xl px-6 pb-8 pt-20">
-        <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#E8541E]">
+        <p className="text-xs font-bold uppercase tracking-[0.25em] text-primary">
           For Heads of Litigation
         </p>
         <h1 className="mt-4 max-w-3xl text-5xl font-bold leading-tight tracking-tight">
           Here&apos;s the case, ready to circulate.
         </h1>
-        <p className="mt-6 max-w-2xl text-lg text-white/70">
+        <p className="mt-6 max-w-2xl text-lg text-muted-foreground">
           You&apos;re already convinced. Fill in your own numbers below and generate a one-page
           business case for your CFO or GC — no waiting on sales.
         </p>
@@ -123,163 +254,192 @@ export default function Home() {
 
       {/* Calculator */}
       <div className="mx-auto max-w-6xl px-6 pb-14">
-        <div className="grid gap-10 lg:grid-cols-[1fr_1.1fr]">
+        <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
           {/* Inputs */}
-          <div className="space-y-8">
-            <section>
-              <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-[#E8541E]">1 · Your portfolio</h2>
-              <div className="mt-4 space-y-4">
-                {portfolioFields.map((f) => (
-                  <Field key={f.key} def={f} value={inputs[f.key]} onChange={set(f.key)} />
-                ))}
-              </div>
-              <p className="mt-3 text-sm text-white/60">
+          <div className="space-y-5">
+            <SectionCard icon={Briefcase} title="Your portfolio">
+              {portfolioFields.map((f) => (
+                <Field key={f.key} def={f} value={inputs[f.key]} onChange={set(f.key)} />
+              ))}
+              <p className="sm:col-span-2 text-sm text-muted-foreground">
                 Implied annual outside counsel litigation spend:{" "}
-                <span className="font-semibold text-white">{fmtUSD(r.impliedSpend)}</span>
+                <span className="font-semibold text-foreground">{fmtUSD(r.impliedSpend)}</span>
               </p>
-            </section>
-            <section>
-              <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-[#E8541E]">2 · Theo Ai investment</h2>
-              <div className="mt-4 space-y-4">
-                {theoFields.map((f) => (
-                  <Field key={f.key} def={f} value={inputs[f.key]} onChange={set(f.key)} />
-                ))}
-              </div>
-            </section>
-            <section>
-              <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-[#E8541E]">3 · Value assumptions</h2>
-              <div className="mt-4 space-y-4">
-                {assumptionFields.map((f) => (
-                  <Field key={f.key} def={f} value={inputs[f.key]} onChange={set(f.key)} />
-                ))}
-              </div>
-            </section>
+            </SectionCard>
+
+            <SectionCard icon={Wallet} title="Theo Ai investment">
+              {theoFields.map((f) => (
+                <Field key={f.key} def={f} value={inputs[f.key]} onChange={set(f.key)} />
+              ))}
+            </SectionCard>
+
+            <SectionCard icon={SlidersHorizontal} title="Value assumptions">
+              {assumptionFields.map((f) => (
+                <Field key={f.key} def={f} value={inputs[f.key]} onChange={set(f.key)} />
+              ))}
+            </SectionCard>
           </div>
 
           {/* Results */}
-          <div className="lg:sticky lg:top-24 lg:self-start">
-            <div className="rounded-2xl bg-white/5 p-8">
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div className="rounded-xl bg-[#221A16] p-4">
-                  <div className="text-3xl font-bold text-[#E8541E]">{r.roi.toFixed(1)}x</div>
-                  <div className="mt-1 text-xs text-white/60">return on investment</div>
-                </div>
-                <div className="rounded-xl bg-[#221A16] p-4">
-                  <div className="text-3xl font-bold text-[#E8541E]">
-                    {r.paybackMonths < 1 ? "<1" : r.paybackMonths.toFixed(1)}
-                  </div>
-                  <div className="mt-1 text-xs text-white/60">months to payback</div>
-                </div>
-                <div className="rounded-xl bg-[#221A16] p-4">
-                  <div className="text-3xl font-bold text-[#E8541E]">{fmtUSDk(r.netBenefit)}</div>
-                  <div className="mt-1 text-xs text-white/60">net annual benefit</div>
-                </div>
-              </div>
+          <div className="space-y-5 lg:sticky lg:top-24 lg:self-start">
+            <div className="grid grid-cols-3 gap-4">
+              <MetricCard
+                icon={TrendingUp}
+                label="ROI"
+                value={`${r.roi.toFixed(1)}x`}
+                helper="return on investment"
+                pill="Model output"
+              />
+              <MetricCard
+                icon={Calendar}
+                label="Payback"
+                value={r.paybackMonths < 1 ? "<1" : r.paybackMonths.toFixed(1)}
+                helper="months to payback"
+                pill="Model output"
+              />
+              <MetricCard
+                icon={DollarSign}
+                label="Net benefit"
+                value={fmtUSDk(r.netBenefit)}
+                helper="net annual benefit"
+                pill="Model output"
+              />
+            </div>
 
-              {/* Self-serve one-pager */}
-              <div className="mt-6 rounded-xl border border-white/15 p-5">
-                <label className="block text-sm font-medium text-white/80">
-                  Company name <span className="text-white/40">(for your one-pager)</span>
-                </label>
-                <input
-                  type="text"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="e.g., Acme Corp"
-                  className="mt-1.5 w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-white outline-none focus-within:border-[#E8541E]"
-                />
-                <button
-                  onClick={() => window.print()}
-                  className="mt-3 w-full rounded-lg bg-[#E8541E] px-4 py-2.5 font-semibold text-white transition hover:bg-[#c9440f]"
-                >
-                  Generate one-pager
-                </button>
-              </div>
+            {/* Self-serve one-pager */}
+            <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+              <label className="block text-sm font-medium text-foreground">
+                Company name <span className="text-muted-foreground">(for your one-pager)</span>
+              </label>
+              <input
+                type="text"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                placeholder="e.g., Acme Corp"
+                className="mt-1.5 h-10 w-full rounded-md border border-border bg-input px-3 text-sm text-foreground shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
+              <button
+                onClick={() => window.print()}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+              >
+                <Printer className="h-4 w-4" />
+                Generate one-pager
+              </button>
+            </div>
 
-              <div className="mt-8">
-                <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-white/60">
-                  Annual value by driver
-                </h3>
-                <div className="mt-4 space-y-3">
-                  {drivers.map((d) => (
-                    <div key={d.label}>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-white/80">{d.label}</span>
-                        <span className="font-semibold">{fmtUSDk(d.value)}</span>
-                      </div>
-                      <div className="mt-1 h-2 rounded-full bg-white/10">
-                        <div
-                          className="h-2 rounded-full bg-[#E8541E]"
-                          style={{ width: `${(d.value / maxDriver) * 100}%` }}
-                        />
-                      </div>
+            <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                Annual value by driver
+              </h3>
+              <div className="mt-4 space-y-3">
+                {drivers.map((d) => (
+                  <div key={d.label}>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-foreground/80">{d.label}</span>
+                      <span className="font-semibold text-foreground">{fmtUSDk(d.value)}</span>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-8 space-y-2 border-t border-white/10 pt-6 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-white/70">Total annual value</span>
-                  <span className="font-semibold">{fmtUSD(r.totalValue)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-white/70">
-                    Total annual cost ({fmtUSD(inputs.license)} license + {fmtUSD(inputs.perCase)} ×{" "}
-                    {inputs.matters} cases)
-                  </span>
-                  <span className="font-semibold">{fmtUSD(r.totalCost)}</span>
-                </div>
-                <div className="flex justify-between text-base">
-                  <span className="font-semibold">Net annual benefit</span>
-                  <span className="font-bold text-[#E8541E]">{fmtUSD(r.netBenefit)}</span>
-                </div>
+                    <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-primary"
+                        style={{ width: `${(d.value / maxDriver) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <button
-              onClick={() => setShowSources((s) => !s)}
-              className="mt-6 text-sm font-semibold text-[#E8541E] hover:underline"
-            >
-              {showSources ? "Hide" : "Show"} benchmark sources ({SOURCES.length})
-            </button>
-            {showSources && (
-              <ul className="mt-4 space-y-3 text-sm">
-                {SOURCES.map((s) => (
-                  <li key={s.claim} className="rounded-lg bg-white/5 p-4">
-                    <p className="font-medium text-white/90">{s.claim}</p>
-                    <a
-                      href={s.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-1 block text-xs text-[#E8541E] hover:underline"
-                    >
-                      {s.source}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <div className="space-y-2 rounded-lg border border-border bg-card p-5 text-sm shadow-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Total annual value</span>
+                <span className="font-semibold text-foreground">{fmtUSD(r.totalValue)}</span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span className="text-muted-foreground">
+                  Total annual cost ({fmtUSD(inputs.license)} license + {fmtUSD(inputs.perCase)} ×{" "}
+                  {inputs.matters} cases)
+                </span>
+                <span className="shrink-0 font-semibold text-foreground">{fmtUSD(r.totalCost)}</span>
+              </div>
+              <div className="flex justify-between border-t border-border pt-2 text-base">
+                <span className="font-semibold text-foreground">Net annual benefit</span>
+                <span className="font-bold text-primary">{fmtUSD(r.netBenefit)}</span>
+              </div>
+            </div>
+
+            {/* Methodology, mirrors the Impact page's "How we estimate impact" pattern */}
+            <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+              <button
+                type="button"
+                onClick={() => setMethodologyOpen((o) => !o)}
+                className="flex w-full items-center justify-between px-5 py-4 text-left"
+              >
+                <span className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Calculator className="h-4 w-4 text-muted-foreground" />
+                  How we calculate this
+                </span>
+                <ChevronDown
+                  className={`h-4 w-4 text-muted-foreground transition-transform ${
+                    methodologyOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+              {methodologyOpen && (
+                <div className="border-t border-border">
+                  <div className="px-5 py-4">
+                    <h4 className="mb-1 text-sm font-semibold text-foreground">
+                      Your inputs, explained
+                    </h4>
+                    <div className="divide-y divide-border">
+                      {methodologyRows.map((row) => (
+                        <MethodologyRow key={row.label} {...row} />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="border-t border-border px-5 py-4">
+                    <h4 className="mb-3 text-sm font-semibold text-foreground">
+                      Cited sources ({SOURCES.length})
+                    </h4>
+                    <div className="space-y-3">
+                      {SOURCES.map((s) => (
+                        <div key={s.claim} className="rounded-md bg-background p-3">
+                          <p className="text-sm font-medium text-foreground">{s.claim}</p>
+                          <a
+                            href={s.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-1 block text-xs text-primary hover:underline"
+                          >
+                            {s.source}
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Peer proof, condensed from the former /proof tab */}
-      <section className="border-t border-white/10 bg-[#1B1512]">
+      <section className="border-t border-border bg-card/40">
         <div className="mx-auto max-w-6xl px-6 py-16">
-          <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-[#E8541E]">Peer proof</h2>
+          <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-primary">Peer proof</h2>
           <h3 className="mt-2 text-2xl font-bold tracking-tight">
             What a peer legal chief tells their board.
           </h3>
 
           {/* Testimonial — DRAFT PLACEHOLDER */}
-          <figure className="mt-8 rounded-2xl bg-white/5 p-8">
-            <blockquote className="max-w-3xl text-xl font-light italic leading-relaxed text-white/90">
+          <figure className="mt-8 rounded-lg border border-border bg-card p-8 shadow-sm">
+            <blockquote className="max-w-3xl text-xl font-light italic leading-relaxed text-foreground/90">
               We stopped discovering our exposure at quarter-close. Every matter now carries a
               defensible, source-linked number.
             </blockquote>
             <figcaption className="mt-5 text-sm">
-              <span className="font-semibold">— General Counsel, Fortune 500 company</span>
+              <span className="font-semibold text-foreground">— General Counsel, Fortune 500 company</span>
               <span className="ml-3 rounded bg-yellow-500/20 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-yellow-400">
                 Draft placeholder — replace with approved customer quote
               </span>
@@ -288,15 +448,15 @@ export default function Home() {
 
           <div className="mt-6 grid gap-5 md:grid-cols-3">
             {proofPoints.map((p) => (
-              <div key={p.stat} className="rounded-xl bg-white/5 p-6">
-                <div className="text-2xl font-bold text-[#E8541E]">{p.stat}</div>
-                <p className="mt-3 text-sm text-white/80">{p.body}</p>
-                <p className="mt-4 text-xs italic text-white/40">{p.src}</p>
+              <div key={p.stat} className="rounded-lg border border-border bg-card p-6 shadow-sm">
+                <div className="text-2xl font-bold text-primary">{p.stat}</div>
+                <p className="mt-3 text-sm text-foreground/80">{p.body}</p>
+                <p className="mt-4 text-xs italic text-muted-foreground">{p.src}</p>
               </div>
             ))}
           </div>
 
-          <p className="mt-8 text-sm text-white/50">
+          <p className="mt-8 text-sm text-muted-foreground">
             Reference calls with a peer Head of Litigation or GC available — ask your account
             contact.
           </p>
