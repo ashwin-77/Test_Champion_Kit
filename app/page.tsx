@@ -7,6 +7,7 @@ import {
   Calendar,
   ChevronDown,
   DollarSign,
+  FileSpreadsheet,
   Printer,
   SlidersHorizontal,
   TrendingUp,
@@ -213,8 +214,21 @@ export default function Home() {
   const [inputs, setInputs] = useState<Inputs>(BENCHMARK_DEFAULTS);
   const [companyName, setCompanyName] = useState("");
   const [methodologyOpen, setMethodologyOpen] = useState(false);
+  const [excelDownloading, setExcelDownloading] = useState(false);
   const r = useMemo(() => compute(inputs), [inputs]);
   const set = (k: NumKey) => (v: number) => setInputs((p) => ({ ...p, [k]: v }));
+
+  const handleDownloadExcel = async () => {
+    setExcelDownloading(true);
+    try {
+      // Dynamically imported so exceljs (~250KB) only loads if someone actually
+      // clicks this, instead of bloating every visitor's initial page load.
+      const { downloadRoiWorkbook } = await import("@/lib/exportExcel");
+      await downloadRoiWorkbook(inputs, companyName);
+    } finally {
+      setExcelDownloading(false);
+    }
+  };
 
   const drivers = [
     { label: "In-house capacity gained (cost avoidance)", value: r.capacityValue },
@@ -306,7 +320,7 @@ export default function Home() {
               />
             </div>
 
-            {/* Self-serve one-pager */}
+            {/* Self-serve financial one-pager */}
             <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
               <label className="block text-sm font-medium text-foreground">
                 Company name <span className="text-muted-foreground">(for your one-pager)</span>
@@ -318,13 +332,26 @@ export default function Home() {
                 placeholder="e.g., Acme Corp"
                 className="mt-1.5 h-10 w-full rounded-md border border-border bg-input px-3 text-sm text-foreground shadow-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
-              <button
-                onClick={() => window.print()}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
-              >
-                <Printer className="h-4 w-4" />
-                Generate one-pager
-              </button>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => window.print()}
+                  className="flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+                >
+                  <Printer className="h-4 w-4" />
+                  PDF
+                </button>
+                <button
+                  onClick={handleDownloadExcel}
+                  disabled={excelDownloading}
+                  className="flex items-center justify-center gap-2 rounded-md border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground transition hover:bg-accent disabled:opacity-60"
+                >
+                  <FileSpreadsheet className="h-4 w-4" />
+                  {excelDownloading ? "Preparing…" : "Excel"}
+                </button>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                PDF for email; Excel for FP&amp;A — same numbers, live formulas.
+              </p>
             </div>
 
             <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
@@ -463,66 +490,129 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Print-only one-pager, generated via window.print() above */}
-      {/* TODO: Patrick has a Fortune Brands one-pager example (not yet in this repo) —
-          once it lands, align this layout (typography, section order, branding) to match it. */}
-      <div className="print-only bg-white p-10 text-black">
-        <div className="flex items-center justify-between border-b border-black/20 pb-4">
-          <div>
-            <div className="text-xl font-bold">Theo Ai — ROI Summary</div>
-            <div className="text-sm text-black/60">
-              {companyName || "Prepared for [Company name]"}
-            </div>
+      {/* Print-only financial one-pager, generated via window.print() above.
+          Styled after the Fortune Brands deck the CEO shared (cream/tan stat
+          cards with an orange top-accent bar, serif headlines, a dark
+          Deep-Coffee block reserved for the final net-benefit number) so it
+          reads as a financial statement, not a printed webpage. */}
+      <div className="print-only bg-white text-black">
+        {/* Header band */}
+        <div className="bg-[#e1d3c5] px-8 pb-6 pt-6">
+          <div className="flex items-center justify-between text-xs text-black/50">
+            <span className="flex items-center gap-1.5 font-semibold">
+              <span className="inline-block h-2 w-2 rotate-45 bg-[#f15735]" />
+              theo ai
+            </span>
+            <span>
+              {new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+            </span>
           </div>
-          <div className="text-xs text-black/50">Prepared for internal budget review</div>
+          <p className="mt-4 text-xs font-bold uppercase tracking-[0.2em] text-[#f15735]">
+            ROI one-pager
+          </p>
+          <h1 className="mt-2 font-serif text-3xl font-medium leading-tight text-black">
+            The business case for {companyName || "your organization"}.
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm text-black/70">
+            At {r.roi.toFixed(1)}x return on investment, Theo Ai pays for itself in{" "}
+            {r.paybackMonths < 1 ? "under a month" : `${r.paybackMonths.toFixed(1)} months`}.
+          </p>
         </div>
 
-        <div className="mt-6 grid grid-cols-3 gap-6 text-center">
-          <div>
-            <div className="text-3xl font-bold">{r.roi.toFixed(1)}x</div>
-            <div className="text-xs text-black/60">return on investment</div>
-          </div>
-          <div>
-            <div className="text-3xl font-bold">
-              {r.paybackMonths < 1 ? "<1" : r.paybackMonths.toFixed(1)}
-            </div>
-            <div className="text-xs text-black/60">months to payback</div>
-          </div>
-          <div>
-            <div className="text-3xl font-bold">{fmtUSDk(r.netBenefit)}</div>
-            <div className="text-xs text-black/60">net annual benefit</div>
-          </div>
-        </div>
-
-        <div className="mt-6">
-          <div className="text-xs font-bold uppercase tracking-widest text-black/60">Key inputs</div>
-          <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
-            <div>Active matters / year: {inputs.matters}</div>
-            <div>Avg outside counsel cost / matter: {fmtUSD(inputs.costPerMatter)}</div>
-            <div>In-house attorneys: {inputs.attorneys}</div>
-            <div>
-              Theo Ai annual license: {fmtUSD(inputs.license)}
-              {inputs.license === BENCHMARK_DEFAULTS.license ? " (placeholder)" : ""}
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-6">
-          <div className="text-xs font-bold uppercase tracking-widest text-black/60">
-            Top value drivers
-          </div>
-          <div className="mt-2 space-y-1 text-sm">
-            {drivers.map((d) => (
-              <div key={d.label} className="flex justify-between">
-                <span>{d.label}</span>
-                <span className="font-semibold">{fmtUSDk(d.value)}</span>
+        <div className="px-8 py-6">
+          {/* Headline stat cards */}
+          <div className="grid grid-cols-3 gap-4">
+            {[
+              { label: "return on investment", value: `${r.roi.toFixed(1)}x` },
+              { label: "months to payback", value: r.paybackMonths < 1 ? "<1" : r.paybackMonths.toFixed(1) },
+              { label: "net annual benefit", value: fmtUSDk(r.netBenefit) },
+            ].map((s) => (
+              <div key={s.label} className="border-t-[3px] border-[#f15735] bg-[#f4ece1] px-4 py-4">
+                <div className="font-serif text-2xl font-semibold text-black">{s.value}</div>
+                <div className="mt-1 text-xs text-black/60">{s.label}</div>
               </div>
             ))}
           </div>
-        </div>
 
-        <div className="mt-8 border-t border-black/20 pt-4 text-[10px] leading-relaxed text-black/50">
-          Benchmark sources: {SOURCES.map((s) => s.source).join(" · ")}
+          {/* Key inputs */}
+          <div className="mt-5 grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-black/60">
+            <div>Active matters / year: <span className="font-semibold text-black">{inputs.matters}</span></div>
+            <div>Avg outside counsel cost / matter: <span className="font-semibold text-black">{fmtUSD(inputs.costPerMatter)}</span></div>
+            <div>In-house attorneys: <span className="font-semibold text-black">{inputs.attorneys}</span></div>
+            <div>
+              Theo Ai annual license: <span className="font-semibold text-black">{fmtUSD(inputs.license)}</span>
+              {inputs.license === BENCHMARK_DEFAULTS.license ? " (placeholder — replace with your quote)" : ""}
+            </div>
+          </div>
+
+          {/* Where the value comes from */}
+          <div className="mt-7">
+            <h2 className="font-serif text-lg font-medium text-black">Where the value comes from</h2>
+            <div className="mt-3 flex h-6 w-full overflow-hidden rounded-sm">
+              {drivers.map((d, i) => (
+                <div
+                  key={d.label}
+                  style={{
+                    width: `${(d.value / r.totalValue) * 100}%`,
+                    backgroundColor: ["#f15735", "#b5a79a", "#cdc3b8", "#e1d9cf"][i] ?? "#e1d9cf",
+                  }}
+                />
+              ))}
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-y-1.5 text-xs">
+              {drivers.map((d, i) => (
+                <div key={d.label} className="flex items-center gap-2">
+                  <span
+                    className="inline-block h-2 w-2 shrink-0 rounded-sm"
+                    style={{ backgroundColor: ["#f15735", "#b5a79a", "#cdc3b8", "#e1d9cf"][i] ?? "#e1d9cf" }}
+                  />
+                  <span className="text-black/70">{d.label}</span>
+                  <span className="font-semibold text-black">{fmtUSDk(d.value)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Investment vs. value — the "money slide" pattern */}
+          <div className="mt-7">
+            <h2 className="font-serif text-lg font-medium text-black">Year 1 ROI math</h2>
+            <div className="mt-3 flex items-stretch gap-2">
+              <div className="flex-1 border-t-[3px] border-[#f15735] bg-[#f4ece1] px-4 py-4">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-[#f15735]">Investment</div>
+                <div className="mt-2 font-serif text-xl font-semibold text-black">
+                  −{fmtUSDk(r.totalCost)}
+                </div>
+                <div className="mt-1 text-[11px] text-black/60">license + per-case fees</div>
+              </div>
+              <div className="flex items-center text-lg font-semibold text-black/40">+</div>
+              <div className="flex-1 border-t-[3px] border-[#f15735] bg-[#f4ece1] px-4 py-4">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-[#f15735]">
+                  Value captured
+                </div>
+                <div className="mt-2 font-serif text-xl font-semibold text-black">
+                  {fmtUSDk(r.totalValue)}
+                </div>
+                <div className="mt-1 text-[11px] text-black/60">across all four drivers</div>
+              </div>
+              <div className="flex items-center text-lg font-semibold text-black/40">=</div>
+              <div className="flex-1 border-t-[3px] border-[#f15735] bg-[#1a1614] px-4 py-4">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-[#f15735]">
+                  Net Year 1
+                </div>
+                <div className="mt-2 font-serif text-xl font-semibold text-[#f4ece1]">
+                  {fmtUSDk(r.netBenefit)}
+                </div>
+                <div className="mt-1 text-[11px] text-[#f4ece1]/60">{r.roi.toFixed(1)}x return</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="mt-7 border-t border-black/15 pt-3 text-[9px] leading-relaxed text-black/45">
+            Deliberately excluded upside: fewer under-reserved surprises at quarter-close, point-tool
+            consolidation, faster board reporting. Benchmark sources:{" "}
+            {SOURCES.map((s) => s.source).join(" · ")}
+          </div>
         </div>
       </div>
     </>

@@ -20,12 +20,10 @@ feedback and the resulting per-tab brief:
 
 - **Head of Litigation** → `/` — post-sell; they're already convinced, so this tab
   gives them ammunition rather than a pitch. Centered on a fill-it-yourself ROI
-  one-pager: the calculator (unchanged math) plus a "Generate one-pager" action
-  (`window.print()` + print CSS in `app/globals.css` / `.print-only` in
-  `app/page.tsx`) that renders a clean, single-page PDF-via-print summary —
-  company name, headline results, top drivers, citations footer. Replaces
-  "request one from sales" with self-serve. Former `/proof` peer-proof content
-  (testimonial + traction stats) folds in here, condensed.
+  calculator plus a financial one-pager generator (PDF via `window.print()`, or
+  a live-formula Excel workbook) — see "One-pager & Excel export" below. Former
+  `/proof` peer-proof content (testimonial + traction stats) folds in here,
+  condensed.
 - **Information & Security** → `/security` — short page. Primary CTA links out to
   trust.theoai.ai for full security documentation. Below that, a condensed
   (~half-length) version of the former `/why-theo` AI-committee brief.
@@ -34,11 +32,16 @@ feedback and the resulting per-tab brief:
   the contract walkthrough (pricing, term, downside protection), all moved from
   the former `/trust`. Security bullets did not fit the shorter format, so
   `/security` relies on the trust.theoai.ai link instead of restating them.
+  Restyled 7/13/26 with icon-led headline cards (punchy 3–5 word headline + one
+  supporting line, `bg-primary/10` icon circle) after Patrick's feedback that
+  the page read "bleak" and the bullets didn't pop — see "Icon-card pattern"
+  below.
 - **Legal** → `/legal` (new) — audience is the rest of the legal department, not
   litigation. Message: a well-functioning litigation flow stops consuming the
   department's attention/budget unpredictably, stabilizes the legal budget via
   reserve accuracy, cuts fire drills via portfolio visibility, and raises Legal's
-  standing with Finance/the board via cleaner data.
+  standing with Finance/the board via cleaner data. Restyled 7/13/26 with the
+  same icon-led card pattern as `/procurement`.
 - **Executive & Board** → `/executive` (new) — three pillars: better forecasting
   (reserve predictability), risk management (early warning signals), and timelier
   reporting (board-ready posture on demand). Reuses condensed why-now stats and
@@ -79,6 +82,53 @@ visual reference for this site's ROI calculator. On the `visual-refresh` branch
   and information architecture moved.
 - Inter font added via `next/font/google` (matches the mockup's typography).
 
+## One-pager & Excel export (added 7/13/26, Fortune Brands deck as reference)
+
+Patrick shared the actual slide deck the CEO sent Fortune Brands
+("Theo Ai + Fortune Brands ROI (3).pdf", via Gmail — not in this repo; ask
+Patrick/Rob if you need it again) after feedback that the original one-pager
+just printed the whole webpage and wasn't something you'd hand to FP&A. Two
+changes on `/` (`app/page.tsx`) in response:
+
+- **PDF one-pager redesigned** to mirror that deck's visual language instead of
+  printing the page verbatim: a cream/tan (`#e1d3c5` / `#f4ece1`) header band
+  with a serif headline, three stat cards with a thin orange top-accent bar,
+  a segmented bar for the value-driver breakdown, and a 3-card "money slide"
+  (Investment + Value Captured = Net Year 1) where the final card inverts to
+  the dark Deep Coffee block — the deck's technique for visually flagging the
+  one number that matters. Print-only styles stay in `.print-only` /
+  `app/globals.css`'s `@media print` block, untouched by the on-screen dark
+  theme. **Lora** (serif, `next/font/google`) was added purely for these
+  print headlines — the rest of the site stays on Inter.
+- **Excel export added** as a second option next to "PDF" (`FileSpreadsheet`
+  button). `lib/exportExcel.ts` builds an actual live model with **exceljs**:
+  every input lands in its own cell, and the results section is written as
+  real Excel formulas referencing those cells (not pasted-in numbers) — so
+  whoever opens it in Excel can tweak an assumption and watch it recalculate,
+  same as `Theo_Ai_ROI_Calculator.xlsx`. A second sheet lists the `SOURCES`
+  citations. The `exceljs` import is dynamic (`await import(...)` inside the
+  click handler) — it's ~250KB, and static-importing it was bloating every
+  visitor's homepage load for a feature most won't click.
+  - **Dependency choice**: tried `xlsx` (SheetJS) first — smaller, but npm's
+    listing has an unpatched high-severity prototype-pollution/ReDoS advisory
+    with no fix available. Went with `exceljs` instead: heavier
+    (~90 packages) but only a moderate, lower-risk advisory (a `uuid` bounds
+    check that doesn't apply to our write-only usage). Re-litigate if a
+    lighter, unflagged option shows up later.
+
+## Icon-card pattern (Procurement & Legal, added 7/13/26)
+
+Patrick's feedback: the bullet markers didn't read as bullets, colors felt
+murky against the brand, and the pages didn't speak to what each specific
+audience needs to approve. Fix, applied to `/procurement` and `/legal`: every
+point is now a headline (3–5 words, not a full sentence) led by an icon in a
+small `bg-primary/10 text-primary` circle, with the fuller explanation demoted
+to one supporting line below. `/procurement`'s exact rule-3 quote also picked
+up a `border-l-4 border-l-primary` accent treatment to read as an official
+callout rather than a paragraph in a card. Same pattern is a reasonable
+candidate for `/security` and `/executive` if they get the same critique later
+— not yet applied there.
+
 ## Hard rules — do not break these
 
 1. **ROI math lives in `lib/model.ts` only.** It mirrors `Theo_Ai_ROI_Calculator.xlsx`
@@ -112,8 +162,10 @@ $246K, calibration $50K. If your change moves these, you changed the model — c
 
 Next.js 15 App Router + TypeScript + Tailwind v4 (via `@tailwindcss/postcss`).
 No prebuilt UI kit (buttons/cards/inputs are hand-built); `lucide-react` is used
-for icons. Brand: bg `#1a1614` (Deep Coffee), primary `#f15735` (Tangerine) — see
-"Visual design system" above for the full token set. Deploy target: Vercel
+for icons and `exceljs` (dynamically imported, client-only) generates the
+downloadable ROI workbook — see "One-pager & Excel export" above. Brand: bg
+`#1a1614` (Deep Coffee), primary `#f15735` (Tangerine) — see "Visual design
+system" above for the full token set. Deploy target: Vercel
 (personal account while prototyping → Theo team account + champions.theoai.ai
 subdomain for production; Hobby tier is non-commercial, so production must ship
 from the team account).
@@ -124,8 +176,10 @@ from the team account).
 - `Theo_Ai_ROI_Calculator.xlsx` — the Excel twin of `lib/model.ts`
 - Persona reference: "12. Theo_AI_Persona_Reference - FINAL.pdf" (Theo Buyer Personas)
 - Clio competitive intel doc — source material for the AI-committee brief on `/security`
-- Fortune Brands one-pager example (referenced by Patrick, not yet in this repo) —
-  should inform the `/` one-pager layout once it lands; see TODO in `app/page.tsx`
+- Fortune Brands one-pager deck ("Theo Ai + Fortune Brands ROI (3).pdf",
+  shared by Patrick via Gmail, originally sent by the CEO) — reference for the
+  `/` one-pager redesign; see "One-pager & Excel export" above. Not stored in
+  this repo; ask Patrick/Rob for it again if needed.
 - gc-dash-v6 mockup source: `github.com/brianjmeier/home-depo-dash` (private;
   Ashwin has collaborator access as of 7/8/26) — the visual reference for the
   design system adopted on `visual-refresh`; its `components/impact-view.tsx` is
@@ -143,9 +197,12 @@ from the team account).
   `/_not-found`) prerender static. Awaiting Ashwin's review of the branch
   preview before merging to `main`.
 - `visual-refresh` branch (off `persona-tabs`) adopts the real Theo color
-  palette site-wide and rebuilds the ROI calculator UI to match the gc-dash-v6
-  mockup's Impact page pattern — see "Visual design system" above. Production
-  build verified clean. Awaiting Ashwin's review before merging.
+  palette site-wide, rebuilds the ROI calculator UI to match the gc-dash-v6
+  mockup's Impact page pattern, redesigns the `/` one-pager (PDF + Excel
+  export) after the Fortune Brands deck, and restyles `/procurement` and
+  `/legal` with icon-led cards — see the sections above for each. Production
+  build verified clean (homepage First Load JS: 111KB; `exceljs` is dynamically
+  imported so it doesn't bloat that). Awaiting Ashwin's review before merging.
 
 ## Working conventions
 
@@ -159,11 +216,12 @@ from the team account).
 
 ## Open items
 
-- [ ] Get the Fortune Brands one-pager example from Patrick and align the `/` (Head
-      of Litigation) one-pager layout to it — TODO left in `app/page.tsx`
 - [ ] Merge `persona-tabs` branch to `main` once Ashwin approves the preview
-- [ ] Merge `visual-refresh` branch (color system + calculator redesign) once
-      Ashwin approves the preview — decide merge order vs. `persona-tabs`
+- [ ] Merge `visual-refresh` branch (color system, calculator redesign,
+      one-pager/Excel export, Procurement/Legal restyle) once Ashwin approves
+      the preview — decide merge order vs. `persona-tabs`
+- [ ] Apply the icon-card pattern to `/security` and `/executive` too, if the
+      same "murky/bleak" feedback comes up for them
 - [ ] Port the new card/token design system to the four non-calculator pages'
       remaining one-off elements if any drift is spotted in review
 - [ ] Replace license placeholder with real quote

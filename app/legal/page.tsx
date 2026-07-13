@@ -1,21 +1,26 @@
 import Link from "next/link";
+import { Bell, Clock, Landmark, LineChart } from "lucide-react";
 
 const legalPoints = [
   {
-    title: "Litigation stops eating the department's attention",
-    body: "Portfolio-level visibility means fewer fire drills that pull colleagues outside litigation into a scramble.",
+    icon: Clock,
+    headline: "Fewer fire drills",
+    body: "Portfolio visibility means litigation stops pulling colleagues into last-minute scrambles.",
   },
   {
-    title: "A stabler legal budget, department-wide",
-    body: "Reserve accuracy on litigation matters means fewer surprises that force reallocation from other legal priorities.",
+    icon: LineChart,
+    headline: "A stabler legal budget",
+    body: "Reserve accuracy means litigation swings stop forcing reallocation from other priorities.",
   },
   {
-    title: "Fewer surprises, more warning",
-    body: "Early risk signals across the docket mean problems surface as a heads-up, not a fire drill.",
+    icon: Bell,
+    headline: "Warnings, not surprises",
+    body: "Early risk signals surface problems as a heads-up, not a fire drill.",
   },
   {
-    title: "Cleaner data, better standing with Finance and the board",
-    body: "Defensible, source-linked numbers raise how the whole legal department is seen by Finance and the board.",
+    icon: Landmark,
+    headline: "Stronger standing with Finance",
+    body: "Defensible, source-linked numbers raise how Legal is seen by Finance and the board.",
   },
 ];
 
@@ -38,11 +43,16 @@ export default function Legal() {
         else absorbs.
       </p>
 
-      <div className="mt-10 grid gap-5 md:grid-cols-2">
+      <div className="mt-10 grid gap-4 md:grid-cols-2">
         {legalPoints.map((p) => (
-          <div key={p.title} className="rounded-lg border border-border bg-card p-6 shadow-sm">
-            <h2 className="font-semibold text-primary">{p.title}</h2>
-            <p className="mt-2 text-sm text-foreground/80">{p.body}</p>
+          <div key={p.headline} className="rounded-lg border border-border bg-card p-5 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <p.icon className="h-4 w-4" />
+              </div>
+              <h2 className="font-semibold text-foreground">{p.headline}</h2>
+            </div>
+            <p className="mt-3 text-sm text-foreground/80">{p.body}</p>
           </div>
         ))}
       </div>
@@ -57,9 +67,9 @@ export default function Legal() {
         ))}
       </div>
 
-      <div className="mt-12 rounded-lg border border-border p-6 text-sm text-muted-foreground">
+      <div className="mt-12 rounded-lg border border-border bg-card p-6 text-sm text-muted-foreground shadow-sm">
         The litigation team is already building the budget case with cited numbers — see{" "}
-        <Link href="/" className="text-primary hover:underline">
+        <Link href="/" className="font-medium text-primary hover:underline">
           Head of Litigation
         </Link>
         .

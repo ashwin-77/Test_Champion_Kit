@@ -1,34 +1,63 @@
+import { Calendar, DollarSign, FileCheck, Lock, Quote, ShieldCheck, TrendingDown } from "lucide-react";
+
 const dataUseFacts = [
   {
-    label: "Never included or identifiable",
-    value:
-      "Customer data, PII, privileged material, party names, or anything that could reasonably identify your company, an individual, or a specific matter.",
+    icon: Lock,
+    headline: "Never included, never identifiable",
+    detail:
+      "Customer data, PII, privileged material, party names — nothing that could identify your company or a specific matter.",
   },
   {
-    label: "Only disclosed, never reidentified",
-    value:
-      "Aggregated statistics only, subject to minimum cohort thresholds — Theo Ai will not attempt to reidentify benchmark data, contractually.",
+    icon: ShieldCheck,
+    headline: "Disclosed in aggregate only",
+    detail: "Minimum cohort thresholds, and contractually no reidentification.",
   },
 ];
 
-const procurementNotes = [
+const contractTerms = [
   {
-    term: "Pricing structure",
-    plain: "Annual platform license plus a ~$150/case fee — mostly variable, scales down with your docket.",
+    icon: DollarSign,
+    headline: "Mostly variable pricing",
+    detail: "Annual license + a ~$150/case fee — scales down with your docket.",
   },
   {
-    term: "Model training",
-    plain: "See the exact data-use commitment above — not restated here to avoid drift.",
+    icon: FileCheck,
+    headline: "No new training on your data",
+    detail: "See the exact commitment above — this row won't restate it.",
   },
   {
-    term: "Term & renewal",
-    plain: "Multi-year terms available; pilot-to-contract path with success criteria agreed in writing up front.",
+    icon: Calendar,
+    headline: "Multi-year, success criteria upfront",
+    detail: "Pilot-to-contract path, agreed in writing before you start.",
   },
   {
-    term: "What's uncommon (in your favor)",
-    plain: "Per-case fees cap exposure and stop with usage. Incident notification windows are contractual, not best-effort.",
+    icon: TrendingDown,
+    headline: "Downside capped",
+    detail: "Per-case fees stop with usage; incident SLAs are contractual, not best-effort.",
   },
 ];
+
+function IconCard({
+  icon: Icon,
+  headline,
+  detail,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  headline: string;
+  detail: string;
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+      <div className="flex items-center gap-3">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <Icon className="h-4 w-4" />
+        </div>
+        <h3 className="font-semibold text-foreground">{headline}</h3>
+      </div>
+      <p className="mt-3 text-sm text-foreground/80">{detail}</p>
+    </div>
+  );
+}
 
 export default function Procurement() {
   return (
@@ -40,20 +69,16 @@ export default function Procurement() {
         Why we benchmark, and exactly how your data is used.
       </h1>
 
-      <div className="mt-10 rounded-lg border border-border bg-card p-8 shadow-sm">
-        <p className="text-lg font-medium text-foreground">
-          &ldquo;Customer data is never used to train foundation or shared models. Theo Ai may
-          derive deidentified, aggregated benchmark statistics (no PII, no privileged material, no
-          party names, minimum cohort thresholds, no reidentification).&rdquo;
+      <div className="mt-10 rounded-lg border-l-4 border-l-primary border-y border-r border-border bg-card p-8 shadow-sm">
+        <Quote className="h-6 w-6 text-primary" />
+        <p className="mt-3 text-lg font-medium text-foreground">
+          Customer data is never used to train foundation or shared models. Theo Ai may derive
+          deidentified, aggregated benchmark statistics (no PII, no privileged material, no party
+          names, minimum cohort thresholds, no reidentification).
         </p>
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           {dataUseFacts.map((f) => (
-            <div key={f.label} className="rounded-lg bg-background p-5">
-              <div className="text-xs font-bold uppercase tracking-widest text-primary">
-                {f.label}
-              </div>
-              <p className="mt-2 text-sm text-foreground/80">{f.value}</p>
-            </div>
+            <IconCard key={f.headline} {...f} />
           ))}
         </div>
         <p className="mt-6 text-sm text-muted-foreground">
@@ -62,27 +87,21 @@ export default function Procurement() {
       </div>
 
       <h2 className="mt-16 text-sm font-bold uppercase tracking-[0.2em] text-primary">
-        Contract walkthrough
+        Contract terms at a glance
       </h2>
-      <div className="mt-6 space-y-4">
-        {procurementNotes.map((n) => (
-          <div
-            key={n.term}
-            className="rounded-lg border border-border bg-card p-6 shadow-sm md:flex md:gap-8"
-          >
-            <div className="w-48 shrink-0 font-semibold text-foreground">{n.term}</div>
-            <p className="mt-2 text-sm text-foreground/80 md:mt-0">{n.plain}</p>
-          </div>
+      <div className="mt-6 grid gap-4 md:grid-cols-2">
+        {contractTerms.map((n) => (
+          <IconCard key={n.headline} {...n} />
         ))}
       </div>
 
-      <div className="mt-12 rounded-lg border border-border p-6 text-sm text-muted-foreground">
+      <div className="mt-12 rounded-lg border border-border bg-card p-6 text-sm text-muted-foreground shadow-sm">
         Full security documentation, SOW/MSA templates, and a CISO pre-read are available at{" "}
         <a
           href="https://trust.theoai.ai"
           target="_blank"
           rel="noreferrer"
-          className="text-primary hover:underline"
+          className="font-medium text-primary hover:underline"
         >
           trust.theoai.ai
         </a>{" "}

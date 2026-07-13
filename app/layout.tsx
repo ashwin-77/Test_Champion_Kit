@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Inter } from "next/font/google";
+import { Inter, Lora } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+// Serif headlines on the printed one-pager only, matching the Fortune Brands
+// deck's editorial typography — the rest of the site stays on Inter.
+const lora = Lora({ subsets: ["latin"], variable: "--font-lora" });
 
 export const metadata: Metadata = {
   title: "Theo Ai — Champion Kit",
@@ -23,7 +26,9 @@ const nav = [
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} min-h-screen bg-background text-foreground antialiased`}>
+      <body
+        className={`${inter.variable} ${lora.variable} min-h-screen bg-background text-foreground antialiased`}
+      >
         <header className="no-print sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
             <Link href="/" className="flex items-center gap-2 text-lg font-bold tracking-tight">
