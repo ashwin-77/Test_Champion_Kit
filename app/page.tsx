@@ -38,7 +38,7 @@ const portfolioFields: FieldDef[] = [
 ];
 
 const theoFields: FieldDef[] = [
-  { key: "license", label: "Theo Ai annual platform license", prefix: "$", placeholder: true, note: "PLACEHOLDER — replace with your Theo Ai quote." },
+  { key: "license", label: "Theo Ai annual platform license", prefix: "$", placeholder: true, note: "PLACEHOLDER: replace with your Theo Ai quote." },
   { key: "perCase", label: "Per-case analysis fee", prefix: "$" },
 ];
 
@@ -253,7 +253,7 @@ export default function Home() {
   return (
     <>
       {/* Hero */}
-      <section className="mx-auto max-w-6xl px-6 pb-8 pt-20">
+      <section className="no-print mx-auto max-w-6xl px-6 pb-8 pt-20">
         <p className="text-xs font-bold uppercase tracking-[0.25em] text-primary">
           For Heads of Litigation
         </p>
@@ -262,12 +262,12 @@ export default function Home() {
         </h1>
         <p className="mt-6 max-w-2xl text-lg text-muted-foreground">
           You&apos;re already convinced. Fill in your own numbers below and generate a one-page
-          business case for your CFO or GC — no waiting on sales.
+          business case for your CFO or GC, no waiting on sales.
         </p>
       </section>
 
       {/* Calculator */}
-      <div className="mx-auto max-w-6xl px-6 pb-14">
+      <div className="no-print mx-auto max-w-6xl px-6 pb-14">
         <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
           {/* Inputs */}
           <div className="space-y-5">
@@ -350,7 +350,7 @@ export default function Home() {
                 </button>
               </div>
               <p className="mt-2 text-xs text-muted-foreground">
-                PDF for email; Excel for FP&amp;A — same numbers, live formulas.
+                PDF for email, Excel for FP&amp;A. Same numbers, live formulas.
               </p>
             </div>
 
@@ -452,7 +452,7 @@ export default function Home() {
       </div>
 
       {/* Peer proof, condensed from the former /proof tab */}
-      <section className="border-t border-border bg-card/40">
+      <section className="no-print border-t border-border bg-card/40">
         <div className="mx-auto max-w-6xl px-6 py-16">
           <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-primary">Peer proof</h2>
           <h3 className="mt-2 text-2xl font-bold tracking-tight">
@@ -466,9 +466,9 @@ export default function Home() {
               defensible, source-linked number.
             </blockquote>
             <figcaption className="mt-5 text-sm">
-              <span className="font-semibold text-foreground">— General Counsel, Fortune 500 company</span>
+              <span className="font-semibold text-foreground">General Counsel, Fortune 500 company</span>
               <span className="ml-3 rounded bg-yellow-500/20 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-yellow-400">
-                Draft placeholder — replace with approved customer quote
+                Draft placeholder: replace with approved customer quote
               </span>
             </figcaption>
           </figure>
@@ -484,7 +484,7 @@ export default function Home() {
           </div>
 
           <p className="mt-8 text-sm text-muted-foreground">
-            Reference calls with a peer Head of Litigation or GC available — ask your account
+            Reference calls with a peer Head of Litigation or GC available. Ask your account
             contact.
           </p>
         </div>
@@ -541,7 +541,7 @@ export default function Home() {
             <div>In-house attorneys: <span className="font-semibold text-black">{inputs.attorneys}</span></div>
             <div>
               Theo Ai annual license: <span className="font-semibold text-black">{fmtUSD(inputs.license)}</span>
-              {inputs.license === BENCHMARK_DEFAULTS.license ? " (placeholder — replace with your quote)" : ""}
+              {inputs.license === BENCHMARK_DEFAULTS.license ? " (placeholder: replace with your quote)" : ""}
             </div>
           </div>
 

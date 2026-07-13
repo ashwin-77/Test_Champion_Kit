@@ -1,5 +1,5 @@
 import ExcelJS from "exceljs";
-import { SOURCES, type Inputs } from "@/lib/model";
+import type { Inputs } from "@/lib/model";
 
 const USD = '"$"#,##0';
 const PCT = "0.0%";
@@ -39,7 +39,7 @@ export async function buildRoiWorkbook(inputs: Inputs, companyName: string) {
   const sheet = wb.addWorksheet("ROI Model", { properties: { defaultColWidth: 20 } });
   sheet.columns = [{ width: 48 }, { width: 20 }];
 
-  const title = sheet.addRow(["Theo Ai — ROI Model"]);
+  const title = sheet.addRow(["Theo Ai ROI Model"]);
   title.font = { bold: true, size: 14, color: { argb: "FFF4ECE1" } };
   title.eachCell((cell) => (cell.fill = HEADER_FILL));
   sheet.mergeCells(title.number, 1, title.number, 2);
@@ -73,7 +73,7 @@ export async function buildRoiWorkbook(inputs: Inputs, companyName: string) {
   const calibrationPct = inputRow(sheet, "Improvement on settlements paid", inputs.calibrationPct, PCT);
   sheet.addRow([]);
 
-  sectionRow(sheet, "Results (live formulas — edit any input above)");
+  sectionRow(sheet, "Results (live formulas, edit any input above)");
   const R = (row: ExcelJS.Row) => `B${row.number}`;
   formulaRow(sheet, "Implied annual outside counsel spend", `${R(matters)}*${R(costPerMatter)}`, USD);
   const totalCost = formulaRow(sheet, "Total annual cost", `${R(license)}+(${R(perCase)}*${R(matters)})`, USD);
@@ -95,13 +95,6 @@ export async function buildRoiWorkbook(inputs: Inputs, companyName: string) {
   formulaRow(sheet, "Net annual benefit", `${R(totalValue)}-${R(totalCost)}`, USD, true);
   formulaRow(sheet, "ROI (multiple)", `${R(totalValue)}/${R(totalCost)}`, '0.0"x"', true);
   formulaRow(sheet, "Payback (months)", `(${R(totalCost)}/${R(totalValue)})*12`, '0.0" months"', true);
-
-  const sources = wb.addWorksheet("Benchmark sources");
-  sources.columns = [{ width: 55 }, { width: 45 }, { width: 55 }];
-  const srcHeader = sources.addRow(["Claim", "Source", "URL"]);
-  srcHeader.font = HEADER_FONT;
-  srcHeader.eachCell((cell) => (cell.fill = HEADER_FILL));
-  SOURCES.forEach((s) => sources.addRow([s.claim, s.source, s.url]));
 
   return wb;
 }

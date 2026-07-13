@@ -10,7 +10,7 @@ const stats = [
 const pillars = [
   {
     title: "Better forecasting",
-    body: "Reserve predictability across the portfolio — no quarter-close surprises to explain to the audit committee.",
+    body: "Reserve predictability across the portfolio, with no quarter-close surprises to explain to the audit committee.",
   },
   {
     title: "Risk management",
@@ -18,7 +18,7 @@ const pillars = [
   },
   {
     title: "Timelier reporting",
-    body: "A board-ready litigation posture on demand — not assembled the week before a meeting.",
+    body: "A board-ready litigation posture on demand, not assembled the week before a meeting.",
   },
 ];
 

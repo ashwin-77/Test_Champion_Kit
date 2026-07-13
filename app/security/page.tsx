@@ -1,7 +1,7 @@
 const comparisons = [
   {
     q: "Why not a general AI assistant (Copilot, ChatGPT Enterprise)?",
-    a: "General assistants summarize what you paste in. Theo Ai ingests the full case file and returns a dollar-denominated settlement range with document-level citations — a defensible number, not a summary.",
+    a: "General assistants summarize what you paste in. Theo Ai ingests the full case file and returns a dollar-denominated settlement range with document-level citations: a defensible number, not a summary.",
   },
   {
     q: "Why is this a better AI bet for an AI committee?",
@@ -10,7 +10,7 @@ const comparisons = [
 ];
 
 const checklist = [
-  "Document-level citation on every output — no uncited generation in the decision path",
+  "Document-level citation on every output, no uncited generation in the decision path",
   "Customer data is never used to train foundation or shared models",
   "Tenant-isolated or VPC deployment available for privileged workloads",
 ];

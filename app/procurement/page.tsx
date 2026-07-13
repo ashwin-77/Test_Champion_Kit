@@ -1,11 +1,11 @@
-import { Calendar, DollarSign, FileCheck, Lock, Quote, ShieldCheck, TrendingDown } from "lucide-react";
+import { Calendar, DollarSign, FileCheck, Lock, ShieldCheck, TrendingDown } from "lucide-react";
 
 const dataUseFacts = [
   {
     icon: Lock,
     headline: "Never included, never identifiable",
     detail:
-      "Customer data, PII, privileged material, party names — nothing that could identify your company or a specific matter.",
+      "Customer data, PII, privileged material, party names: nothing that could identify your company or a specific matter.",
   },
   {
     icon: ShieldCheck,
@@ -18,12 +18,12 @@ const contractTerms = [
   {
     icon: DollarSign,
     headline: "Mostly variable pricing",
-    detail: "Annual license + a ~$150/case fee — scales down with your docket.",
+    detail: "Annual license plus a ~$150/case fee that scales down with your docket.",
   },
   {
     icon: FileCheck,
     headline: "No new training on your data",
-    detail: "See the exact commitment above — this row won't restate it.",
+    detail: "See the exact commitment above. This row won't restate it.",
   },
   {
     icon: Calendar,
@@ -70,11 +70,11 @@ export default function Procurement() {
       </h1>
 
       <div className="mt-10 rounded-lg border-l-4 border-l-primary border-y border-r border-border bg-card p-8 shadow-sm">
-        <Quote className="h-6 w-6 text-primary" />
-        <p className="mt-3 text-lg font-medium text-foreground">
+        <div className="font-serif text-6xl leading-none text-primary/40">&ldquo;</div>
+        <p className="-mt-4 text-lg font-medium text-foreground">
           Customer data is never used to train foundation or shared models. Theo Ai may derive
           deidentified, aggregated benchmark statistics (no PII, no privileged material, no party
-          names, minimum cohort thresholds, no reidentification).
+          names, minimum cohort thresholds, no reidentification).&rdquo;
         </p>
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           {dataUseFacts.map((f) => (
@@ -104,8 +104,8 @@ export default function Procurement() {
           className="font-medium text-primary hover:underline"
         >
           trust.theoai.ai
-        </a>{" "}
-        — ask your account contact.
+        </a>
+        . Ask your account contact.
       </div>
     </div>
   );

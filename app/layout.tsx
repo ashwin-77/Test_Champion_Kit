@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const lora = Lora({ subsets: ["latin"], variable: "--font-lora" });
 
 export const metadata: Metadata = {
-  title: "Theo Ai — Champion Kit",
+  title: "Theo Ai: Champion Kit",
   description:
     "Everything a Head of Litigation needs to walk into the budget conversation prepared.",
   robots: { index: false, follow: false }, // unlisted while in draft
@@ -55,7 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer className="no-print border-t border-border">
           <div className="mx-auto max-w-6xl px-6 py-8 text-xs text-muted-foreground">
             <p>
-              Internal draft — contains placeholders (license pricing, customer quote). Benchmarks
+              Internal draft, contains placeholders (license pricing, customer quote). Benchmarks
               are cited estimates for a budget conversation, not a guarantee of results.
             </p>
             <p className="mt-2">© {new Date().getFullYear()} Theo Ai · theoai.ai</p>

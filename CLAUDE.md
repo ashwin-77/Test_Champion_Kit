@@ -95,20 +95,29 @@ changes on `/` (`app/page.tsx`) in response:
   with a serif headline, three stat cards with a thin orange top-accent bar,
   a segmented bar for the value-driver breakdown, and a 3-card "money slide"
   (Investment + Value Captured = Net Year 1) where the final card inverts to
-  the dark Deep Coffee block — the deck's technique for visually flagging the
+  the dark Deep Coffee block, the deck's technique for visually flagging the
   one number that matters. Print-only styles stay in `.print-only` /
   `app/globals.css`'s `@media print` block, untouched by the on-screen dark
   theme. **Lora** (serif, `next/font/google`) was added purely for these
-  print headlines — the rest of the site stays on Inter.
+  print headlines; the rest of the site stays on Inter.
+  - First cut of this only marked `<header>`/`<footer>` as `no-print` — the
+    hero, calculator, and peer-proof sections on `/` still printed underneath
+    the one-pager. Fixed 7/13/26: those three top-level sections in
+    `app/page.tsx` now carry `no-print` too, so printing shows the one-pager
+    alone. If you add a new top-level section to `/`, give it `no-print`
+    unless it's meant to appear on the printout.
 - **Excel export added** as a second option next to "PDF" (`FileSpreadsheet`
   button). `lib/exportExcel.ts` builds an actual live model with **exceljs**:
   every input lands in its own cell, and the results section is written as
-  real Excel formulas referencing those cells (not pasted-in numbers) — so
+  real Excel formulas referencing those cells (not pasted-in numbers), so
   whoever opens it in Excel can tweak an assumption and watch it recalculate,
-  same as `Theo_Ai_ROI_Calculator.xlsx`. A second sheet lists the `SOURCES`
-  citations. The `exceljs` import is dynamic (`await import(...)` inside the
-  click handler) — it's ~250KB, and static-importing it was bloating every
-  visitor's homepage load for a feature most won't click.
+  same as `Theo_Ai_ROI_Calculator.xlsx`. No sources/citations sheet by design
+  (Ashwin, 7/13/26): this workbook is meant to circulate and help win the
+  deal, not invite a line-by-line pressure-test of the benchmarks. The
+  citations still live in the PDF one-pager's footer and the site's
+  methodology accordion. The `exceljs` import is dynamic (`await import(...)`
+  inside the click handler); it's ~250KB, and static-importing it was
+  bloating every visitor's homepage load for a feature most won't click.
   - **Dependency choice**: tried `xlsx` (SheetJS) first — smaller, but npm's
     listing has an unpatched high-severity prototype-pollution/ReDoS advisory
     with no fix available. Went with `exceljs` instead: heavier
@@ -125,9 +134,12 @@ point is now a headline (3–5 words, not a full sentence) led by an icon in a
 small `bg-primary/10 text-primary` circle, with the fuller explanation demoted
 to one supporting line below. `/procurement`'s exact rule-3 quote also picked
 up a `border-l-4 border-l-primary` accent treatment to read as an official
-callout rather than a paragraph in a card. Same pattern is a reasonable
-candidate for `/security` and `/executive` if they get the same critique later
-— not yet applied there.
+callout rather than a paragraph in a card, plus a proper pull-quote mark
+(large `&ldquo;` in `font-serif text-primary/40` at the top, closing `&rdquo;`
+at the end of the quoted text, fixed 7/13/26 after the icon-only treatment
+read as an unbalanced single quotation mark). Same pattern is a reasonable
+candidate for `/security` and `/executive` if they get the same critique
+later; not yet applied there.
 
 ## Hard rules — do not break these
 
@@ -151,6 +163,14 @@ candidate for `/security` and `/executive` if they get the same critique later
    - Claims needing Marketing sign-off before external use: "2x matters per attorney,"
      "85% vs 60–65% accuracy"
 6. Site stays `noindex` (see `app/layout.tsx` metadata) until content is approved.
+
+## Writing style
+
+Ashwin's note, 7/13/26: avoid em dashes in copy on the site and in exports
+(PDF one-pager, Excel workbook). Use a period, comma, colon, or a rewritten
+sentence instead. Code comments are exempt. This was a cleanup pass on
+existing copy, not a hard lint rule; just don't reach for the em dash by
+default when writing new copy.
 
 ## Base-case results (with benchmark defaults)
 

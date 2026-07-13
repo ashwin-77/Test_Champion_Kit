@@ -68,7 +68,7 @@ export default function Legal() {
       </div>
 
       <div className="mt-12 rounded-lg border border-border bg-card p-6 text-sm text-muted-foreground shadow-sm">
-        The litigation team is already building the budget case with cited numbers — see{" "}
+        The litigation team is already building the budget case with cited numbers. See{" "}
         <Link href="/" className="font-medium text-primary hover:underline">
           Head of Litigation
         </Link>
