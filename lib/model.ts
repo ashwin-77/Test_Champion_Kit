@@ -1,67 +1,85 @@
 // Single source of truth for the ROI model.
-// Mirrors Theo_Ai_ROI_Calculator.xlsx exactly — if you change a formula here,
-// change it there too (and vice versa).
+// Mirrors Theo_Ai_ROI_Model_v2.xlsx exactly — if you change a formula here,
+// change it there too (and vice versa). Value drivers are partitioned by
+// whose cost is avoided (outside counsel invoices vs. in-house payroll) so
+// no dollar is counted twice; the "faster settlement" and "outside counsel
+// efficiency" drivers are a waterfall — matters credited in the first driver
+// are excluded from the matters counted in the second.
 
 export interface Inputs {
-  matters: number;          // active defense matters per year
-  costPerMatter: number;    // avg outside counsel cost per matter ($)
-  blendedRate: number;      // blended outside counsel hourly rate ($/hr)
-  attorneys: number;        // in-house litigation attorneys
-  loadedCost: number;       // fully loaded cost per in-house attorney ($)
-  settlementsPaid: number;  // total settlements paid per year ($); 0 to exclude driver D
-  license: number;          // Theo Ai annual platform license ($) — PLACEHOLDER until quoted
-  perCase: number;          // Theo Ai per-case analysis fee ($)
-  // value-driver assumptions
-  earlierPct: number;       // % of matters resolving one phase earlier
-  costAvoidPct: number;     // % of per-matter cost avoided when settling earlier
-  hoursSaved: number;       // billed hours replaced per matter per year
-  capacityGain: number;     // capacity gain per attorney (vs. 2x anchor claim)
-  calibrationPct: number;   // improvement on settlements paid
+  // Main inputs — the only three fields exposed on the calculator.
+  matters: number; // active defense matters per year
+  attorneys: number; // in-house litigation attorneys
+  settlementsPaid: number; // total settlements paid per year ($); 0 or unchecked to exclude the calibration driver
+  includeCalibration: boolean; // whether the settlement-calibration driver counts toward the results
+
+  // Fixed assumptions, pre-filled with cited industry benchmarks. Editable
+  // in the Excel export; shown read-only (with sources) behind "How we
+  // calculate this" on the site.
+  costPerMatter: number; // avg outside counsel cost per matter ($)
+  loadedCostAttorney: number; // fully loaded cost per in-house attorney ($)
+  paralegalCost: number; // fully loaded cost per paralegal ($); used only to express in-house savings in paralegal-equivalents
+  earlierPct: number; // % of matters resolving one phase earlier
+  costAvoidPct: number; // % of per-matter cost avoided when settling earlier
+  hoursSaved: number; // billed hours replaced per matter per year
+  hourlyRate: number; // blended outside counsel hourly rate ($/hr)
+  pctTimeTracking: number; // % of in-house team time on case tracking, updates & assessment
+  pctAbsorbed: number; // % of that work Theo Ai absorbs
+  calibrationPct: number; // improvement on settlements paid
 }
 
 export const BENCHMARK_DEFAULTS: Inputs = {
   matters: 50,
-  costPerMatter: 82_000,
-  blendedRate: 650,
   attorneys: 5,
-  loadedCost: 350_000,
   settlementsPaid: 5_000_000,
-  license: 100_000, // PLACEHOLDER — replace with actual Theo Ai quote
-  perCase: 150,
+  includeCalibration: false,
+  costPerMatter: 82_000,
+  loadedCostAttorney: 350_000,
+  paralegalCost: 55_000,
   earlierPct: 0.2,
   costAvoidPct: 0.3,
   hoursSaved: 8,
-  capacityGain: 0.2,
+  hourlyRate: 650,
+  pctTimeTracking: 0.15,
+  pctAbsorbed: 0.5,
   calibrationPct: 0.01,
 };
 
 export interface Results {
   impliedSpend: number;
-  totalCost: number;
-  earlierSettlement: number; // driver A
-  hoursReplaced: number;     // driver B
-  capacityValue: number;     // driver C
-  calibration: number;       // driver D
-  totalValue: number;
-  netBenefit: number;
-  roi: number;               // value / cost (x)
-  paybackMonths: number;
+  fasterSettlement: number; // driver A
+  spendRemainingAfterA: number; // waterfall guard, informational only
+  mattersExcludingA: number; // matters not already credited in driver A
+  outsideCounselEfficiency: number; // driver B
+  inHouseCapacity: number; // driver C
+  paralegalEquivalent: number; // in-house capacity value, expressed as paralegal headcount
+  calibrationPotential: number; // driver D, before the include toggle
+  calibrationCounted: number; // driver D, after the include toggle
+  totalAnnualValue: number;
 }
 
 export function compute(i: Inputs): Results {
   const impliedSpend = i.matters * i.costPerMatter;
-  const totalCost = i.license + i.perCase * i.matters;
-  const earlierSettlement = i.matters * i.earlierPct * i.costPerMatter * i.costAvoidPct;
-  const hoursReplaced = i.hoursSaved * i.blendedRate * i.matters;
-  const capacityValue = i.attorneys * i.loadedCost * i.capacityGain;
-  const calibration = i.settlementsPaid * i.calibrationPct;
-  const totalValue = earlierSettlement + hoursReplaced + capacityValue + calibration;
-  const netBenefit = totalValue - totalCost;
-  const roi = totalCost === 0 ? 0 : totalValue / totalCost;
-  const paybackMonths = totalValue === 0 ? 0 : (totalCost / totalValue) * 12;
+  const fasterSettlement = impliedSpend * i.earlierPct * i.costAvoidPct;
+  const spendRemainingAfterA = impliedSpend - fasterSettlement;
+  const mattersExcludingA = i.matters * (1 - i.earlierPct);
+  const outsideCounselEfficiency = i.hoursSaved * i.hourlyRate * mattersExcludingA;
+  const inHouseCapacity = i.attorneys * i.loadedCostAttorney * i.pctTimeTracking * i.pctAbsorbed;
+  const paralegalEquivalent = i.paralegalCost > 0 ? inHouseCapacity / i.paralegalCost : 0;
+  const calibrationPotential = i.settlementsPaid * i.calibrationPct;
+  const calibrationCounted = i.includeCalibration ? calibrationPotential : 0;
+  const totalAnnualValue = fasterSettlement + outsideCounselEfficiency + inHouseCapacity + calibrationCounted;
   return {
-    impliedSpend, totalCost, earlierSettlement, hoursReplaced,
-    capacityValue, calibration, totalValue, netBenefit, roi, paybackMonths,
+    impliedSpend,
+    fasterSettlement,
+    spendRemainingAfterA,
+    mattersExcludingA,
+    outsideCounselEfficiency,
+    inHouseCapacity,
+    paralegalEquivalent,
+    calibrationPotential,
+    calibrationCounted,
+    totalAnnualValue,
   };
 }
 

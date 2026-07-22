@@ -60,13 +60,10 @@ export default function Executive() {
         <div>
           <div className="text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground">Base case</div>
           <p className="mt-2 text-lg text-foreground/90">
-            <span className="font-bold text-primary">{r.roi.toFixed(1)}x</span> ROI ·{" "}
-            <span className="font-bold text-primary">
-              {r.paybackMonths < 1 ? "<1" : r.paybackMonths.toFixed(1)}-month
-            </span>{" "}
-            payback ·{" "}
-            <span className="font-bold text-primary">{fmtUSDk(r.totalValue)}</span> total annual
-            value
+            <span className="font-bold text-primary">{fmtUSDk(r.totalAnnualValue)}</span> in annual
+            value unlocked, equivalent to{" "}
+            <span className="font-bold text-primary">{r.paralegalEquivalent.toFixed(1)}</span> paralegal
+            headcount
           </p>
         </div>
         <Link

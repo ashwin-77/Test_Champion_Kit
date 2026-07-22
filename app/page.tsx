@@ -4,18 +4,16 @@ import { useMemo, useState } from "react";
 import {
   Briefcase,
   Calculator,
-  Calendar,
   ChevronDown,
   DollarSign,
   FileSpreadsheet,
   Printer,
-  SlidersHorizontal,
   TrendingUp,
-  Wallet,
+  Users,
 } from "lucide-react";
 import { BENCHMARK_DEFAULTS, compute, fmtUSD, fmtUSDk, SOURCES, type Inputs } from "@/lib/model";
 
-type NumKey = keyof Inputs;
+type NumKey = Exclude<keyof Inputs, "includeCalibration">;
 type Tone = "teal" | "rose";
 
 interface FieldDef {
@@ -25,43 +23,47 @@ interface FieldDef {
   prefix?: string;
   suffix?: string;
   pct?: boolean;
-  placeholder?: boolean;
 }
 
-const portfolioFields: FieldDef[] = [
-  { key: "matters", label: "Active defense matters / year", note: "Sized so total spend matches the NRF 2025 average ($4.1M for $1B+ revenue companies)." },
-  { key: "costPerMatter", label: "Avg outside counsel cost / matter", prefix: "$", note: "Published per-matter defense costs run $75K–$500K+." },
-  { key: "blendedRate", label: "Blended outside counsel rate", prefix: "$", suffix: "/hr", note: "AmLaw 100 partner averages passed $1,000/hr in 2025; $650 is a conservative partner/associate blend." },
-  { key: "attorneys", label: "In-house litigation attorneys" },
-  { key: "loadedCost", label: "Fully loaded cost / attorney", prefix: "$" },
-  { key: "settlementsPaid", label: "Total settlements paid / year", prefix: "$", note: "Set to 0 to exclude the calibration driver." },
+// The only three inputs exposed on the calculator, matching the red/primary
+// cells in Theo_Ai_ROI_Model_v2.xlsx.
+const mainFields: FieldDef[] = [
+  { key: "matters", label: "Active defense matters / year", note: "Sized so implied spend matches the NRF 2025 average ($4.1M for $1B+ revenue companies)." },
+  { key: "attorneys", label: "In-house litigation attorneys", note: "Your team headcount." },
+  { key: "settlementsPaid", label: "Total settlements paid / year", prefix: "$", note: "Optional. Used only by the settlement-calibration driver below." },
 ];
 
-const theoFields: FieldDef[] = [
-  { key: "license", label: "Theo Ai annual platform license", prefix: "$", placeholder: true, note: "PLACEHOLDER: replace with your Theo Ai quote." },
-  { key: "perCase", label: "Per-case analysis fee", prefix: "$" },
-];
-
+// Fixed, benchmark-derived assumptions. Not editable on the site; shown
+// read-only with sources behind "How we calculate this."
 const assumptionFields: FieldDef[] = [
+  { key: "costPerMatter", label: "Avg outside counsel cost / matter", prefix: "$", note: "Published per-matter defense costs run $75K–$500K+." },
+  { key: "loadedCostAttorney", label: "Fully loaded cost / attorney", prefix: "$", note: "Salary, bonus, benefits and overhead." },
+  { key: "paralegalCost", label: "Fully loaded cost / paralegal", prefix: "$", note: "Used only to express in-house savings in paralegal-equivalents." },
   { key: "earlierPct", label: "Matters resolving one phase earlier", pct: true, note: ">90% of civil cases settle pre-trial; prediction moves the decision earlier on a fraction of them." },
   { key: "costAvoidPct", label: "Per-matter cost avoided when settling earlier", pct: true, note: "Discovery alone is 20–50% of litigation cost." },
-  { key: "hoursSaved", label: "Billed hours replaced / matter / year", note: "Assessment memos, exposure valuations, status reports produced by Theo Ai instead of billed by the firm." },
-  { key: "capacityGain", label: "Capacity gain per attorney", pct: true, note: "Theo Ai's anchor metric is 2x; the model credits only a fraction of it." },
-  { key: "calibrationPct", label: "Improvement on settlements paid", pct: true },
+  { key: "hoursSaved", label: "Billed hours replaced / matter / year", note: "Conservative: about one day of assessment and reporting work per matter per year." },
+  { key: "hourlyRate", label: "Blended outside counsel rate", prefix: "$", suffix: "/hr", note: "AmLaw 100 partner averages passed $1,000/hr in 2025; $650 is a conservative partner/associate blend." },
+  { key: "pctTimeTracking", label: "Team time on case tracking & assessment", pct: true, note: "Counts only in-house work; billed assessment work is captured in the efficiency driver above." },
+  { key: "pctAbsorbed", label: "Share of that work Theo Ai absorbs", pct: true, note: "Conservative: Theo Ai's anchor metric is 2x matters per attorney." },
+  { key: "calibrationPct", label: "Improvement on settlements paid", pct: true, note: "Benchmarked prediction (85% accuracy vs. 60–65% human baseline) reduces over-payment at the margin." },
 ];
 
-const allFields = [...portfolioFields, ...theoFields, ...assumptionFields];
+const allFields = [...mainFields, ...assumptionFields];
 
 const methodologyPills: Partial<Record<NumKey, { tone: Tone; label: string }>> = {
-  matters: { tone: "teal", label: "Cited benchmark" },
-  costPerMatter: { tone: "teal", label: "Cited benchmark" },
-  blendedRate: { tone: "teal", label: "Cited benchmark" },
+  matters: { tone: "rose", label: "Your input" },
+  attorneys: { tone: "rose", label: "Your input" },
   settlementsPaid: { tone: "rose", label: "Your input" },
-  license: { tone: "rose", label: "Placeholder" },
+  costPerMatter: { tone: "teal", label: "Cited benchmark" },
+  loadedCostAttorney: { tone: "rose", label: "Modeled assumption" },
+  paralegalCost: { tone: "rose", label: "Modeled assumption" },
   earlierPct: { tone: "teal", label: "Cited benchmark" },
   costAvoidPct: { tone: "teal", label: "Cited benchmark" },
   hoursSaved: { tone: "rose", label: "Modeled assumption" },
-  capacityGain: { tone: "teal", label: "Cited benchmark" },
+  hourlyRate: { tone: "teal", label: "Cited benchmark" },
+  pctTimeTracking: { tone: "rose", label: "Modeled assumption" },
+  pctAbsorbed: { tone: "rose", label: "Modeled assumption" },
+  calibrationPct: { tone: "teal", label: "Cited benchmark" },
 };
 
 const proofPoints = [
@@ -82,6 +84,8 @@ const proofPoints = [
   },
 ];
 
+const DRIVER_COLORS = ["#f15735", "#b5a79a", "#cdc3b8", "#e1d9cf"];
+
 function SourcePill({ children, tone }: { children: React.ReactNode; tone: Tone }) {
   const tones: Record<Tone, string> = {
     teal: "bg-teal-500/10 text-teal-400",
@@ -98,14 +102,7 @@ function Field({ def, value, onChange }: { def: FieldDef; value: number; onChang
   const display = def.pct ? Math.round(value * 1000) / 10 : value;
   return (
     <label className="block space-y-1.5">
-      <span className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-        {def.label}
-        {def.placeholder && (
-          <span className="rounded bg-yellow-500/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-yellow-400">
-            placeholder
-          </span>
-        )}
-      </span>
+      <span className="text-xs font-semibold text-muted-foreground">{def.label}</span>
       <div className="relative">
         {def.prefix && (
           <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
@@ -190,26 +187,6 @@ function MethodologyRow({
   );
 }
 
-function SectionCard({
-  icon: Icon,
-  title,
-  children,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
-      <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-        <Icon className="h-4 w-4 text-muted-foreground" />
-        {title}
-      </h2>
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">{children}</div>
-    </div>
-  );
-}
-
 export default function Home() {
   const [inputs, setInputs] = useState<Inputs>(BENCHMARK_DEFAULTS);
   const [companyName, setCompanyName] = useState("");
@@ -231,10 +208,10 @@ export default function Home() {
   };
 
   const drivers = [
-    { label: "In-house capacity gained (cost avoidance)", value: r.capacityValue },
-    { label: "Outside counsel hours replaced (hard savings)", value: r.hoursReplaced },
-    { label: "Earlier settlement on a subset of matters", value: r.earlierSettlement },
-    { label: "Settlement calibration", value: r.calibration },
+    { label: "Faster settlement", value: r.fasterSettlement },
+    { label: "Outside counsel efficiency", value: r.outsideCounselEfficiency },
+    { label: "In-house capacity", value: r.inHouseCapacity },
+    ...(inputs.includeCalibration ? [{ label: "Settlement calibration", value: r.calibrationCounted }] : []),
   ].sort((a, b) => b.value - a.value);
   const maxDriver = Math.max(...drivers.map((d) => d.value), 1);
 
@@ -261,8 +238,8 @@ export default function Home() {
           Here&apos;s the case, ready to circulate.
         </h1>
         <p className="mt-6 max-w-2xl text-lg text-muted-foreground">
-          You&apos;re already convinced. Fill in your own numbers below and generate a one-page
-          business case for your CFO or GC, no waiting on sales.
+          Three inputs. One number back: the annual value Theo Ai unlocks for your team,
+          benchmarked and ready for your CFO or GC.
         </p>
       </section>
 
@@ -271,51 +248,61 @@ export default function Home() {
         <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
           {/* Inputs */}
           <div className="space-y-5">
-            <SectionCard icon={Briefcase} title="Your portfolio">
-              {portfolioFields.map((f) => (
-                <Field key={f.key} def={f} value={inputs[f.key]} onChange={set(f.key)} />
-              ))}
-              <p className="sm:col-span-2 text-sm text-muted-foreground">
+            <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+              <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <Briefcase className="h-4 w-4 text-muted-foreground" />
+                Your litigation portfolio
+              </h2>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                {mainFields.map((f) => (
+                  <Field key={f.key} def={f} value={inputs[f.key]} onChange={set(f.key)} />
+                ))}
+              </div>
+
+              <div className="mt-4 flex items-center justify-between rounded-md border border-border bg-background px-3 py-2">
+                <span className="text-xs text-muted-foreground">
+                  Include settlement calibration in results?
+                </span>
+                <div className="inline-flex rounded-md border border-border p-0.5">
+                  {([false, true] as const).map((val) => (
+                    <button
+                      key={String(val)}
+                      type="button"
+                      onClick={() => setInputs((p) => ({ ...p, includeCalibration: val }))}
+                      className={`rounded px-2.5 py-1 text-xs font-semibold transition ${
+                        inputs.includeCalibration === val
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {val ? "Yes" : "No"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <p className="mt-4 text-sm text-muted-foreground">
                 Implied annual outside counsel litigation spend:{" "}
                 <span className="font-semibold text-foreground">{fmtUSD(r.impliedSpend)}</span>
               </p>
-            </SectionCard>
-
-            <SectionCard icon={Wallet} title="Theo Ai investment">
-              {theoFields.map((f) => (
-                <Field key={f.key} def={f} value={inputs[f.key]} onChange={set(f.key)} />
-              ))}
-            </SectionCard>
-
-            <SectionCard icon={SlidersHorizontal} title="Value assumptions">
-              {assumptionFields.map((f) => (
-                <Field key={f.key} def={f} value={inputs[f.key]} onChange={set(f.key)} />
-              ))}
-            </SectionCard>
+            </div>
           </div>
 
           {/* Results */}
           <div className="space-y-5 lg:sticky lg:top-24 lg:self-start">
-            <div className="grid grid-cols-3 gap-4">
-              <MetricCard
-                icon={TrendingUp}
-                label="ROI"
-                value={`${r.roi.toFixed(1)}x`}
-                helper="return on investment"
-                pill="Model output"
-              />
-              <MetricCard
-                icon={Calendar}
-                label="Payback"
-                value={r.paybackMonths < 1 ? "<1" : r.paybackMonths.toFixed(1)}
-                helper="months to payback"
-                pill="Model output"
-              />
+            <div className="grid grid-cols-2 gap-4">
               <MetricCard
                 icon={DollarSign}
-                label="Net benefit"
-                value={fmtUSDk(r.netBenefit)}
-                helper="net annual benefit"
+                label="Annual value"
+                value={fmtUSDk(r.totalAnnualValue)}
+                helper="value Theo Ai unlocks per year"
+                pill="Model output"
+              />
+              <MetricCard
+                icon={Users}
+                label="Capacity unlocked"
+                value={r.paralegalEquivalent.toFixed(1)}
+                helper="paralegal-equivalent headcount avoided"
                 pill="Model output"
               />
             </div>
@@ -375,23 +362,9 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-            </div>
-
-            <div className="space-y-2 rounded-lg border border-border bg-card p-5 text-sm shadow-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Total annual value</span>
-                <span className="font-semibold text-foreground">{fmtUSD(r.totalValue)}</span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span className="text-muted-foreground">
-                  Total annual cost ({fmtUSD(inputs.license)} license + {fmtUSD(inputs.perCase)} ×{" "}
-                  {inputs.matters} cases)
-                </span>
-                <span className="shrink-0 font-semibold text-foreground">{fmtUSD(r.totalCost)}</span>
-              </div>
-              <div className="flex justify-between border-t border-border pt-2 text-base">
-                <span className="font-semibold text-foreground">Net annual benefit</span>
-                <span className="font-bold text-primary">{fmtUSD(r.netBenefit)}</span>
+              <div className="mt-4 flex justify-between border-t border-border pt-3 text-base">
+                <span className="font-semibold text-foreground">Total annual value</span>
+                <span className="font-bold text-primary">{fmtUSD(r.totalAnnualValue)}</span>
               </div>
             </div>
 
@@ -416,7 +389,7 @@ export default function Home() {
                 <div className="border-t border-border">
                   <div className="px-5 py-4">
                     <h4 className="mb-1 text-sm font-semibold text-foreground">
-                      Your inputs, explained
+                      Your inputs and our assumptions
                     </h4>
                     <div className="divide-y divide-border">
                       {methodologyRows.map((row) => (
@@ -493,8 +466,9 @@ export default function Home() {
       {/* Print-only financial one-pager, generated via window.print() above.
           Styled after the Fortune Brands deck the CEO shared (cream/tan stat
           cards with an orange top-accent bar, serif headlines, a dark
-          Deep-Coffee block reserved for the final net-benefit number) so it
-          reads as a financial statement, not a printed webpage. */}
+          Deep-Coffee block used sparingly for emphasis) so it reads as a
+          financial statement, not a printed webpage. Value-only: there is no
+          investment/cost section, since the model excludes pricing. */}
       <div className="print-only bg-white text-black">
         {/* Header band */}
         <div className="bg-[#e1d3c5] px-8 pb-6 pt-6">
@@ -508,41 +482,40 @@ export default function Home() {
             </span>
           </div>
           <p className="mt-4 text-xs font-bold uppercase tracking-[0.2em] text-[#f15735]">
-            ROI one-pager
+            Value one-pager
           </p>
           <h1 className="mt-2 font-serif text-3xl font-medium leading-tight text-black">
-            The business case for {companyName || "your organization"}.
+            The value Theo Ai unlocks for {companyName || "your organization"}.
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-black/70">
-            At {r.roi.toFixed(1)}x return on investment, Theo Ai pays for itself in{" "}
-            {r.paybackMonths < 1 ? "under a month" : `${r.paybackMonths.toFixed(1)} months`}.
+            An estimated {fmtUSD(r.totalAnnualValue)} in annual value across faster settlements,
+            outside counsel efficiency, and in-house capacity.
           </p>
         </div>
 
         <div className="px-8 py-6">
           {/* Headline stat cards */}
-          <div className="grid grid-cols-3 gap-4">
-            {[
-              { label: "return on investment", value: `${r.roi.toFixed(1)}x` },
-              { label: "months to payback", value: r.paybackMonths < 1 ? "<1" : r.paybackMonths.toFixed(1) },
-              { label: "net annual benefit", value: fmtUSDk(r.netBenefit) },
-            ].map((s) => (
-              <div key={s.label} className="border-t-[3px] border-[#f15735] bg-[#f4ece1] px-4 py-4">
-                <div className="font-serif text-2xl font-semibold text-black">{s.value}</div>
-                <div className="mt-1 text-xs text-black/60">{s.label}</div>
-              </div>
-            ))}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="border-t-[3px] border-[#f15735] bg-[#f4ece1] px-4 py-4">
+              <div className="font-serif text-2xl font-semibold text-black">{fmtUSDk(r.totalAnnualValue)}</div>
+              <div className="mt-1 text-xs text-black/60">annual value unlocked</div>
+            </div>
+            <div className="border-t-[3px] border-[#f15735] bg-[#f4ece1] px-4 py-4">
+              <div className="font-serif text-2xl font-semibold text-black">{r.paralegalEquivalent.toFixed(1)}</div>
+              <div className="mt-1 text-xs text-black/60">paralegal-equivalent headcount avoided</div>
+            </div>
           </div>
 
           {/* Key inputs */}
           <div className="mt-5 grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-black/60">
             <div>Active matters / year: <span className="font-semibold text-black">{inputs.matters}</span></div>
-            <div>Avg outside counsel cost / matter: <span className="font-semibold text-black">{fmtUSD(inputs.costPerMatter)}</span></div>
             <div>In-house attorneys: <span className="font-semibold text-black">{inputs.attorneys}</span></div>
-            <div>
-              Theo Ai annual license: <span className="font-semibold text-black">{fmtUSD(inputs.license)}</span>
-              {inputs.license === BENCHMARK_DEFAULTS.license ? " (placeholder: replace with your quote)" : ""}
-            </div>
+            {inputs.includeCalibration && (
+              <div>
+                Settlements paid / year:{" "}
+                <span className="font-semibold text-black">{fmtUSD(inputs.settlementsPaid)}</span>
+              </div>
+            )}
           </div>
 
           {/* Where the value comes from */}
@@ -553,8 +526,8 @@ export default function Home() {
                 <div
                   key={d.label}
                   style={{
-                    width: `${(d.value / r.totalValue) * 100}%`,
-                    backgroundColor: ["#f15735", "#b5a79a", "#cdc3b8", "#e1d9cf"][i] ?? "#e1d9cf",
+                    width: `${(d.value / r.totalAnnualValue) * 100}%`,
+                    backgroundColor: DRIVER_COLORS[i] ?? "#e1d9cf",
                   }}
                 />
               ))}
@@ -564,46 +537,12 @@ export default function Home() {
                 <div key={d.label} className="flex items-center gap-2">
                   <span
                     className="inline-block h-2 w-2 shrink-0 rounded-sm"
-                    style={{ backgroundColor: ["#f15735", "#b5a79a", "#cdc3b8", "#e1d9cf"][i] ?? "#e1d9cf" }}
+                    style={{ backgroundColor: DRIVER_COLORS[i] ?? "#e1d9cf" }}
                   />
                   <span className="text-black/70">{d.label}</span>
                   <span className="font-semibold text-black">{fmtUSDk(d.value)}</span>
                 </div>
               ))}
-            </div>
-          </div>
-
-          {/* Investment vs. value — the "money slide" pattern */}
-          <div className="mt-7">
-            <h2 className="font-serif text-lg font-medium text-black">Year 1 ROI math</h2>
-            <div className="mt-3 flex items-stretch gap-2">
-              <div className="flex-1 border-t-[3px] border-[#f15735] bg-[#f4ece1] px-4 py-4">
-                <div className="text-[10px] font-bold uppercase tracking-widest text-[#f15735]">Investment</div>
-                <div className="mt-2 font-serif text-xl font-semibold text-black">
-                  −{fmtUSDk(r.totalCost)}
-                </div>
-                <div className="mt-1 text-[11px] text-black/60">license + per-case fees</div>
-              </div>
-              <div className="flex items-center text-lg font-semibold text-black/40">+</div>
-              <div className="flex-1 border-t-[3px] border-[#f15735] bg-[#f4ece1] px-4 py-4">
-                <div className="text-[10px] font-bold uppercase tracking-widest text-[#f15735]">
-                  Value captured
-                </div>
-                <div className="mt-2 font-serif text-xl font-semibold text-black">
-                  {fmtUSDk(r.totalValue)}
-                </div>
-                <div className="mt-1 text-[11px] text-black/60">across all four drivers</div>
-              </div>
-              <div className="flex items-center text-lg font-semibold text-black/40">=</div>
-              <div className="flex-1 border-t-[3px] border-[#f15735] bg-[#1a1614] px-4 py-4">
-                <div className="text-[10px] font-bold uppercase tracking-widest text-[#f15735]">
-                  Net Year 1
-                </div>
-                <div className="mt-2 font-serif text-xl font-semibold text-[#f4ece1]">
-                  {fmtUSDk(r.netBenefit)}
-                </div>
-                <div className="mt-1 text-[11px] text-[#f4ece1]/60">{r.roi.toFixed(1)}x return</div>
-              </div>
             </div>
           </div>
 

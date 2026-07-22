@@ -19,11 +19,11 @@ heavy." Nav is now five persona tabs instead of five content-type tabs. Verbatim
 feedback and the resulting per-tab brief:
 
 - **Head of Litigation** → `/` — post-sell; they're already convinced, so this tab
-  gives them ammunition rather than a pitch. Centered on a fill-it-yourself ROI
-  calculator plus a financial one-pager generator (PDF via `window.print()`, or
-  a live-formula Excel workbook) — see "One-pager & Excel export" below. Former
-  `/proof` peer-proof content (testimonial + traction stats) folds in here,
-  condensed.
+  gives them ammunition rather than a pitch. Centered on a fill-it-yourself,
+  three-input value calculator plus a one-pager generator (PDF via
+  `window.print()`, or a live-formula Excel workbook) — see "Value-unlock model
+  rewrite" and "One-pager & Excel export" below. Former `/proof` peer-proof
+  content (testimonial + traction stats) folds in here, condensed.
 - **Information & Security** → `/security` — short page. Primary CTA links out to
   trust.theoai.ai for full security documentation. Below that, a condensed
   (~half-length) version of the former `/why-theo` AI-committee brief.
@@ -125,6 +125,50 @@ changes on `/` (`app/page.tsx`) in response:
     check that doesn't apply to our write-only usage). Re-litigate if a
     lighter, unflagged option shows up later.
 
+## Value-unlock model rewrite (added 7/22/26, Theo_Ai_ROI_Model_v2.xlsx)
+
+Ashwin shared a new authoritative model (`Theo_Ai_ROI_Model_v2.xlsx`, in
+Ashwin's Documents/Pricing folder) with a different formula set and a
+different design goal: fewer inputs, no pricing, value-only framing. This
+fully replaced the old `lib/model.ts` — field names, formulas, and defaults
+are new, not incremental. Reasoning:
+
+- **Only three inputs are exposed**, matching the model's own convention
+  (highlighted cells the user pointed to): active defense matters / year,
+  in-house litigation attorneys, and total settlements paid / year (optional,
+  used only by the calibration driver, with a Yes/No toggle to include it).
+  Everything else, avg cost per matter, loaded costs, all the value-driver
+  percentages, is now a **fixed benchmark assumption**. It's not editable on
+  the site; it's shown read-only with its source inside "How we calculate
+  this" (same accordion pattern as before, just no longer double-duty as an
+  input panel).
+- **New formulas, a waterfall between drivers A and B** so no matter's value
+  is double-counted: driver A (faster settlement) = implied spend × % matters
+  resolving earlier × % cost avoided; driver B (outside counsel efficiency)
+  uses `matters × (1 − % resolving earlier)`, i.e. only the matters *not*
+  already credited in driver A. Driver C (in-house capacity) = attorneys ×
+  loaded cost × % team time tracking × % Theo Ai absorbs, with a derived
+  "paralegal-equivalent headcount avoided" stat (`driver C ÷ loaded cost per
+  paralegal`). Driver D (settlement calibration) is off by default, matching
+  the source workbook, and only counts toward the total when the toggle is
+  Yes. See `lib/model.ts`'s `compute()` — it mirrors the sheet's cell formulas
+  line for line.
+- **No pricing, no Theo Ai investment section, no ROI/payback.** Ashwin: "we
+  don't need pricing or Theo Ai quote... have this be just the value unlock."
+  The old license/per-case-fee inputs, and the ROI multiple / payback-months /
+  net-benefit outputs that depended on them, are gone from the site, the
+  print one-pager, and the Excel export. The single headline number is now
+  **Total annual value unlocked**, paired with the paralegal-equivalent stat.
+- **Print one-pager and Excel export both follow suit.** The one-pager's
+  "money slide" (Investment + Value Captured = Net Year 1) is gone; it's now
+  two stat cards (annual value, paralegal-equivalent) plus the driver
+  breakdown bar. `lib/exportExcel.ts` mirrors the v2 workbook's own layout
+  and conventions almost exactly (same section order, blue font for adjustable
+  cells) rather than the old ad hoc layout, and keeps every assumption cell
+  live/editable in the exported file, even though the site itself only
+  exposes the three main inputs. That split is intentional: the site is the
+  simplified lead-gen surface, the export is the full-power model for FP&A.
+
 ## Icon-card pattern (Procurement & Legal, added 7/13/26)
 
 Patrick's feedback: the bullet markers didn't read as bullets, colors felt
@@ -143,8 +187,10 @@ later; not yet applied there.
 
 ## Hard rules — do not break these
 
-1. **ROI math lives in `lib/model.ts` only.** It mirrors `Theo_Ai_ROI_Calculator.xlsx`
-   (in Ashwin's Documents). Change formulas in both places or neither.
+1. **Value math lives in `lib/model.ts` only.** It mirrors
+   `Theo_Ai_ROI_Model_v2.xlsx` (in Ashwin's Documents/Pricing folder — see
+   "Value-unlock model rewrite" below). Change formulas in both places or
+   neither.
 2. **Every benchmark number must keep its citation** (`SOURCES` in `lib/model.ts`).
    Do not invent statistics. The old $5–6M savings figures from an earlier prototype
    are UNVALIDATED — never reintroduce them.
@@ -158,10 +204,11 @@ later; not yet applied there.
    Max one mention, framed as "original validation on historical cases." Never in the
    main pitch.
 5. **Placeholders that must stay visibly marked** until replaced with approved values:
-   - $100K annual license (real quote pending) — yellow "placeholder" badge
-   - GC testimonial, now in the peer-proof section of `/` — "draft placeholder" badge
+   - GC testimonial, in the peer-proof section of `/` — "draft placeholder" badge
    - Claims needing Marketing sign-off before external use: "2x matters per attorney,"
      "85% vs 60–65% accuracy"
+   - (The license-cost placeholder no longer applies — pricing was removed
+     from the model entirely on 7/22/26; see "Value-unlock model rewrite.")
 6. Site stays `noindex` (see `app/layout.tsx` metadata) until content is approved.
 
 ## Writing style
@@ -174,9 +221,13 @@ default when writing new copy.
 
 ## Base-case results (with benchmark defaults)
 
-$906K total annual value vs. $107.5K cost → 8.4x ROI, ~1.4-month payback,
-$798.5K net. Drivers: capacity $350K, hours replaced $260K, earlier settlement
-$246K, calibration $50K. If your change moves these, you changed the model — check rule 1.
+$585,250 total annual value unlocked (calibration off by default), plus 2.4
+paralegal-equivalent headcount avoided. Drivers: faster settlement $246K,
+outside counsel efficiency $208K, in-house capacity $131.25K. Settlement
+calibration adds $50K more if toggled on ($635,250 total). No cost, ROI, or
+payback figures — the model is value-only as of 7/22/26; see "Value-unlock
+model rewrite." If your change moves these, you changed the model — check
+rule 1.
 
 ## Stack & conventions
 
@@ -193,7 +244,10 @@ from the team account).
 ## Related assets (not in this repo)
 
 - `Theo_Ai_Champion_Enablement_Kit.pptx` — the sendable deck (Documents folder)
-- `Theo_Ai_ROI_Calculator.xlsx` — the Excel twin of `lib/model.ts`
+- `Theo_Ai_ROI_Model_v2.xlsx` (Documents/Pricing folder) — the current Excel
+  twin of `lib/model.ts`, as of 7/22/26; see "Value-unlock model rewrite."
+  Supersedes the older `Theo_Ai_ROI_Calculator.xlsx` as the source of truth
+  for formulas, though that file may still exist on disk.
 - Persona reference: "12. Theo_AI_Persona_Reference - FINAL.pdf" (Theo Buyer Personas)
 - Clio competitive intel doc — source material for the AI-committee brief on `/security`
 - Fortune Brands one-pager deck ("Theo Ai + Fortune Brands ROI (3).pdf",
@@ -205,24 +259,23 @@ from the team account).
   design system adopted on `visual-refresh`; its `components/impact-view.tsx` is
   the specific file the ROI calculator's UI was modeled on
 
-## Current state (as of July 8, 2026)
+## Current state (as of July 22, 2026)
 
 - Deployed and live on Ashwin's personal Vercel (project: test-champion-kit) via
   GitHub integration. Push to `main` → auto-deploy. `vercel.json` pins the
   framework to nextjs — do not remove it (without it, Vercel misdetected the
   project as static and failed with "No Output Directory named public").
-- `persona-tabs` branch restructures the site into the five persona-tab routes
-  described above, per Patrick's feedback. Production build verified clean; all
-  6 routes (`/`, `/security`, `/procurement`, `/legal`, `/executive`,
-  `/_not-found`) prerender static. Awaiting Ashwin's review of the branch
-  preview before merging to `main`.
-- `visual-refresh` branch (off `persona-tabs`) adopts the real Theo color
-  palette site-wide, rebuilds the ROI calculator UI to match the gc-dash-v6
-  mockup's Impact page pattern, redesigns the `/` one-pager (PDF + Excel
-  export) after the Fortune Brands deck, and restyles `/procurement` and
-  `/legal` with icon-led cards — see the sections above for each. Production
-  build verified clean (homepage First Load JS: 111KB; `exceljs` is dynamically
-  imported so it doesn't bloat that). Awaiting Ashwin's review before merging.
+- `persona-tabs` and `visual-refresh` are both merged to `main` (7/13/26) —
+  the five persona-tab routes, the real Theo color palette, the redesigned
+  calculator, the Fortune Brands-styled one-pager + Excel export, and the
+  Procurement/Legal icon-card restyle are all live in production.
+- `value-unlock-model` branch (off `main`) is the full model rewrite described
+  above: three inputs instead of thirteen, no pricing/ROI/payback, a new
+  "Total annual value unlocked" headline. Production build verified clean.
+  Every generated Excel formula was checked by hand against `compute()`'s
+  logic (row-by-row cell references), and the print one-pager was verified to
+  fit a single page with no leftover cost/investment section. Awaiting
+  Ashwin's review before merging to `main`.
 
 ## Working conventions
 
@@ -236,15 +289,11 @@ from the team account).
 
 ## Open items
 
-- [ ] Merge `persona-tabs` branch to `main` once Ashwin approves the preview
-- [ ] Merge `visual-refresh` branch (color system, calculator redesign,
-      one-pager/Excel export, Procurement/Legal restyle) once Ashwin approves
-      the preview — decide merge order vs. `persona-tabs`
+- [ ] Merge `value-unlock-model` branch to `main` once Ashwin approves the preview
 - [ ] Apply the icon-card pattern to `/security` and `/executive` too, if the
       same "murky/bleak" feedback comes up for them
 - [ ] Port the new card/token design system to the four non-calculator pages'
       remaining one-off elements if any drift is spotted in review
-- [ ] Replace license placeholder with real quote
 - [ ] Replace draft GC quote with approved reference
 - [ ] Marketing sign-off on 2x and 85% claims
 - [ ] Move to Theo Vercel team + champions.theoai.ai when invite lands
