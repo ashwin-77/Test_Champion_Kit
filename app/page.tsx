@@ -238,8 +238,8 @@ export default function Home() {
           Here&apos;s the case, ready to circulate.
         </h1>
         <p className="mt-6 max-w-2xl text-lg text-muted-foreground">
-          Three inputs. One number back: the annual value Theo Ai unlocks for your team,
-          benchmarked and ready for your CFO or GC.
+          See how much value Theo Ai unlocks for your team, benchmarked and ready for your
+          CFO or GC.
         </p>
       </section>
 
